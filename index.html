@@ -522,8 +522,10 @@ function setTab(tab,el){
   currentTab=tab;
   document.querySelectorAll(".tab").forEach(t=>t.classList.remove("on"));
   el.classList.add("on");
-  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
-  document.getElementById(`page-${tab==="long"?"long":tab==="short"?"short":tab==="perf"?"perf":"market"}`).classList.add("active");
+  document.querySelectorAll(".page").forEach(p=>{p.classList.remove("active");p.style.display="none";});
+  const pageId = tab==="long"?"page-long":tab==="short"?"page-short":tab==="perf"?"page-perf":"page-market";
+  const page = document.getElementById(pageId);
+  if(page){page.classList.add("active");page.style.display="block";}
   if(tab==="perf") renderPerf();
 }
 
