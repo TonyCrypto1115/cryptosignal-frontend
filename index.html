@@ -272,7 +272,7 @@ function spark(c,ch){
 
 // ── Render list ───────────────────────────────────────────
 function render(){
-  const all=SYMS.map(s=>({s,..D[s]&&{sig:sig(D[s])}})||{s,sig:{s:"HOLD"}});
+  const all=SYMS.map(s=>({s,...D[s]&&{sig:sig(D[s])}})||{s,sig:{s:"HOLD"}});
   const ls=all.filter(x=>x.sig?.s==="LONG");
   const ss=all.filter(x=>x.sig?.s==="LONG"||x.sig?.s==="SHORT");
 
