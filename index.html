@@ -198,6 +198,8 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 
   <!-- 績效頁 -->
   <div class="page" id="page-perf">
+  <div style="margin-bottom:12px">
+    <div style="font-size:13px;font-weight:600;color:var(--soft);margin-bottom:10px">📊 交易績效統計</div>
     <div class="stat-grid">
       <div class="stat-box"><div class="stat-lbl">總信號數</div><div class="stat-val" id="p-total">—</div></div>
       <div class="stat-box"><div class="stat-lbl">勝率</div><div class="stat-val gold" id="p-wr">—</div></div>
@@ -215,13 +217,13 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
         <span style="color:var(--short)">❌ 止損</span>
       </div>
     </div>
-    <div class="sig-history">
-      <div class="sig-history-title">歷史信號紀錄</div>
-      <div id="p-history"></div>
-    </div>
-    <div style="font-size:10px;color:var(--muted);text-align:center;margin-top:14px;padding-bottom:4px">
-      ⚠️ 以上僅供參考，不構成投資建議。加密貨幣具高度風險，請謹慎評估。
-    </div>
+  </div>
+  <div class="sig-history">
+    <div class="sig-history-title">歷史信號紀錄</div>
+    <div id="p-history"></div>
+  </div>
+  <div style="font-size:10px;color:var(--muted);text-align:center;margin-top:14px;padding-bottom:4px">
+    ⚠️ 以上僅供參考，不構成投資建議。加密貨幣具高度風險，請謹慎評估。
   </div>
 </div>
 
@@ -407,11 +409,11 @@ function renderPerf(){
   document.getElementById("p-wr").textContent=closed.length?`${wr}%`:"—";
   document.getElementById("p-win").textContent=wins.length;
   document.getElementById("p-loss").textContent=losses.length;
-  document.getElementById("p-bar").style.width=`${wr}%`;
+  document.getElementById("p-bar").style.width=closed.length?`${wr}%`:"0%";
 
   const histHTML=allSignals.length===0
-    ? `<div class="empty-state">尚無信號紀錄<br><span style="font-size:11px">等待第一個信號出現</span></div>`
-    : allSignals.map(sig=>{
+    ?`<div class="empty-state">尚無信號紀錄<br><span style="font-size:11px">等待第一個信號出現</span></div>`
+    :allSignals.map(sig=>{
         const dir=sig.direction==="LONG"?"▲":"▼";
         const dt=new Date(sig.created_at).toLocaleString("zh-TW",{timeZone:"Asia/Taipei",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"});
         const rb=sig.status==="OPEN"?"OPEN":sig.result==="WIN"?"WIN":"LOSS";
