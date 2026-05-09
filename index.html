@@ -70,9 +70,9 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 .ccard.sHOLDING::before{background:linear-gradient(90deg,var(--long),var(--coral));opacity:1}
 
 /* signal glow */
-.ccard.sLONG{box-shadow:0 0 0 1px rgba(40,168,112,.15),0 4px 20px rgba(40,168,112,.12)}
-.ccard.sSHORT{box-shadow:0 0 0 1px rgba(224,72,88,.12),0 4px 20px rgba(224,72,88,.1)}
-.ccard.sHOLDING{box-shadow:0 0 0 1px rgba(40,168,112,.2),0 4px 24px rgba(40,168,112,.15)}
+.ccard.sLONG{background:linear-gradient(160deg,rgba(40,168,112,.08) 0%,#fff 60%);box-shadow:0 0 0 1px rgba(40,168,112,.2),0 4px 20px rgba(40,168,112,.12)}
+.ccard.sSHORT{background:linear-gradient(160deg,rgba(224,72,88,.07) 0%,#fff 60%);box-shadow:0 0 0 1px rgba(224,72,88,.18),0 4px 20px rgba(224,72,88,.1)}
+.ccard.sHOLDING{background:linear-gradient(160deg,rgba(40,168,112,.1) 0%,#fff 60%);box-shadow:0 0 0 1px rgba(40,168,112,.25),0 4px 24px rgba(40,168,112,.15)}
 
 .cc-sym{font-size:16px;font-weight:700;letter-spacing:-.3px;margin-bottom:1px}
 .cc-name{font-size:10px;color:var(--muted);margin-bottom:8px}
@@ -433,6 +433,28 @@ function render(){
 }
 
 // ── Performance ───────────────────────────────────────────
+async function updateSignal(id, field, value){
+  try{
+    const body={};
+    if(field==="entered") body.entered = value===""?null:value==="true";
+    if(field==="actual_pnl") body.actual_pnl = value===""?null:parseFloat(value);
+    await fetch(`${SUPABASE_URL}/rest/v1/signals?id=eq.${id}`,{
+      method:"PATCH",
+      headers:{
+        "apikey":SUPABASE_KEY,
+        "Authorization":`Bearer ${SUPABASE_KEY}`,
+        "Content-Type":"application/json",
+        "Prefer":"return=minimal"
+      },
+      body:JSON.stringify(body)
+    });
+    const sig=allSignals.find(s=>s.id===id);
+    if(sig){
+      if(field==="entered") sig.entered=body.entered;
+      if(field==="actual_pnl") sig.actual_pnl=body.actual_pnl;
+    }
+  }catch(e){console.error("更新失敗",e);}
+}  
 function renderPerf(){
   const closed=allSignals.filter(s=>s.status!=="OPEN");
   const wins=closed.filter(s=>s.result==="WIN");
@@ -451,12 +473,29 @@ function renderPerf(){
         const dt=new Date(sig.created_at).toLocaleString("zh-TW",{timeZone:"Asia/Taipei",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"});
         const rb=sig.status==="OPEN"?"OPEN":sig.result==="WIN"?"WIN":"LOSS";
         const rl=sig.status==="OPEN"?"持倉中":sig.result==="WIN"?"+6%":"-3%";
-        return`<div class="sig-row">
-          <div class="sig-row-dir ${sig.direction}">${dir}</div>
-          <div class="sig-row-info"><div class="sig-row-sym">${sig.symbol.replace("USDT","")}/USDT</div><div class="sig-row-date">${dt} · ${sig.signal_type||""}</div></div>
-          <div class="sig-row-price">進 $${fmt(sig.entry_price)}<br>損 $${fmt(sig.sl_price)}</div>
-          <div><span class="result-badge ${rb}">${rl}</span></div>
-        </div>`;
+        return`<div class="sig-row" style="flex-wrap:wrap;gap:8px">
+          <div style="display:flex;align-items:center;gap:10px;width:100%">
+            <div class="sig-row-dir ${sig.direction}">${dir}</div>
+            <div class="sig-row-info"><div class="sig-row-sym">${sig.symbol.replace("USDT","")}/USDT</div><div class="sig-row-date">${dt} · ${sig.signal_type||""}</div></div>
+            <div class="sig-row-price">進 $${fmt(sig.entry_price)}<br>損 $${fmt(sig.sl_price)}</div>
+            <div><span class="result-badge ${rb}">${rl}</span></div>
+          </div>
+          <div style="display:flex;gap:8px;width:100%;padding-left:38px;flex-wrap:wrap">
+            <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--soft)">
+              <span>是否進場</span>
+              <select onchange="updateSignal(${sig.id},'entered',this.value)" style="font-size:11px;border:1px solid var(--border);border-radius:6px;padding:2px 6px;background:var(--bg);color:var(--text);cursor:pointer">
+                <option value="" ${sig.entered===null?"selected":""}>未填</option>
+                <option value="true" ${sig.entered===true?"selected":""}>✓ 有進場</option>
+                <option value="false" ${sig.entered===false?"selected":""}>✗ 未進場</option>
+              </select>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--soft)">
+              <span>實際盈虧</span>
+              <input type="number" step="0.01" placeholder="填入金額" value="${sig.actual_pnl||""}"
+                onblur="updateSignal(${sig.id},'actual_pnl',this.value)"
+                style="font-size:11px;border:1px solid var(--border);border-radius:6px;padding:2px 8px;background:var(--bg);color:var(--text);width:80px;font-family:var(--mono)"/>
+              <span style="color:var(--muted)">USDT</span>
+            </div>
       }).join("");
   document.getElementById("p-history").innerHTML=histHTML;
 }
