@@ -351,7 +351,7 @@ function rsiBar(val,height=4){
   return`<div class="rsi-bar-track" style="height:${height}px"><div class="rsi-bar-fill" style="width:${w}%;background:${col}"></div></div>`;
 }
 
-const kdColor=k=>!k?"#c4a898":k<30?"#28a870":k>70?"#e04858":"#c4a898";
+const kdColor=k=>!k?"#c4a898":k<30?"#28a870":k>70?"#d4903a":"#c4a898";
 const SL2={LONG:"做多",SHORT:"做空",WATCH:"觀望",HOLD:"持有",HOLDING:"持倉中"};
 const TR={BULL:"↑ 日線多頭",BEAR:"↓ 日線空頭",NEUTRAL:"→ 日線中性"};
 
@@ -473,8 +473,8 @@ function openP(sym){
   const kc=kdColor(c.kd?.k);
 
   const anaRows=[
-    ["KD 狀態",gx?"金叉":dx?"死叉":"無交叉",gx?"✅":dx?"⚠️":""],
-    ["日線趨勢",c.tr==="BULL"?"多頭":c.tr==="BEAR"?"空頭":"中性",c.tr==="BULL"?"✅":c.tr==="BEAR"?"❌":""],
+    ["KD 狀態",gx?"金叉 ↑":dx?"死叉 ↓":"無交叉",""],
+["日線趨勢",c.tr==="BULL"?"多頭 ↑":c.tr==="BEAR"?"空頭 ↓":"中性",""],
   ];
 
   let sigHTML="";
