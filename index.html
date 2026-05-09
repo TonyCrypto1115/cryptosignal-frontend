@@ -4,165 +4,140 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
 <title>CryptoSignal</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
 :root{
   --bg:#fdf7f2;
   --card:#ffffff;
-  --border:rgba(200,170,150,0.18);
+  --border:rgba(200,168,148,0.18);
   --text:#221a16;
   --soft:#8a6e62;
   --muted:#c4a898;
-  --peach:#f09060;
   --coral:#e06050;
   --rose:#c8506a;
-  --gold:#d4903a;
   --long:#28a870;
   --short:#e04858;
   --watch:#d4903a;
-  --mesh1:rgba(240,160,100,0.28);
-  --mesh2:rgba(200,130,160,0.22);
-  --mesh3:rgba(120,185,165,0.18);
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
-  background:radial-gradient(ellipse 100% 50% at 0% 0%,var(--mesh1),transparent 55%),
-             radial-gradient(ellipse 80% 70% at 100% 15%,var(--mesh2),transparent 50%),
-             radial-gradient(ellipse 70% 60% at 60% 100%,var(--mesh3),transparent 55%)}
+  background:
+    radial-gradient(ellipse 90% 50% at 5% 5%,rgba(240,155,100,0.22),transparent 55%),
+    radial-gradient(ellipse 70% 60% at 95% 15%,rgba(200,125,155,0.18),transparent 50%),
+    radial-gradient(ellipse 60% 50% at 55% 95%,rgba(115,180,160,0.15),transparent 55%)}
 
-/* ── HEADER ────────────────────────────────────────────── */
-#hdr{position:sticky;top:0;z-index:50;
-  background:rgba(253,247,242,0.92);backdrop-filter:blur(18px);
-  border-bottom:1px solid var(--border);padding:14px 16px 10px}
+/* ── HEADER ── */
+#hdr{position:sticky;top:0;z-index:50;background:rgba(253,247,242,0.92);backdrop-filter:blur(18px);border-bottom:1px solid var(--border);padding:14px 16px 10px}
 .hdr-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
-#logo{font-size:18px;font-weight:700;letter-spacing:-.4px;
-  background:linear-gradient(135deg,var(--coral),var(--rose));
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+#logo{font-size:18px;font-weight:700;letter-spacing:-.4px;background:linear-gradient(135deg,var(--coral),var(--rose));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 #upd{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace}
 .tabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
 .tabs::-webkit-scrollbar{display:none}
-.tab{flex-shrink:0;padding:4px 14px;border-radius:20px;font-size:12px;font-weight:600;
-  border:1.5px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .15s}
+.tab{flex-shrink:0;padding:4px 14px;border-radius:20px;font-size:12px;font-weight:600;border:1.5px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .15s}
 .tab.on{background:var(--text);color:#fff;border-color:var(--text)}
-.tab.tl{border-color:var(--long);color:var(--long)}
-.tab.tl.on{background:var(--long);color:#fff}
-.tab.ts{border-color:var(--short);color:var(--short)}
-.tab.ts.on{background:var(--short);color:#fff}
+.tab.tl{border-color:var(--long);color:var(--long)}.tab.tl.on{background:var(--long);color:#fff}
+.tab.ts{border-color:var(--short);color:var(--short)}.tab.ts.on{background:var(--short);color:#fff}
 
-/* ── PROGRESS ──────────────────────────────────────────── */
+/* ── PROGRESS ── */
 #pgwrap{height:2px;background:var(--border);display:none}
-#pgfill{height:100%;background:linear-gradient(90deg,var(--peach),var(--rose));width:0%;transition:width .25s;border-radius:1px}
+#pgfill{height:100%;background:linear-gradient(90deg,#f09060,var(--rose));width:0%;transition:width .25s;border-radius:1px}
 
-/* ── BANNER ────────────────────────────────────────────── */
-#banner{display:none;margin:10px 16px 0;padding:9px 14px;
-  background:rgba(40,168,112,.1);border:1px solid rgba(40,168,112,.25);
-  border-radius:12px;font-size:12px;font-weight:600;color:var(--long)}
+/* ── BANNER ── */
+#banner{display:none;margin:10px 16px 0;padding:9px 14px;background:rgba(40,168,112,.1);border:1px solid rgba(40,168,112,.25);border-radius:12px;font-size:12px;font-weight:600;color:var(--long)}
 
-/* ── CONTENT ───────────────────────────────────────────── */
-#content{position:relative;z-index:1;padding:10px 14px 60px}
+/* ── CONTENT ── */
+#content{position:relative;z-index:1;padding:12px 14px 60px}
 
-/* ── LOADING ───────────────────────────────────────────── */
+/* ── LOADING ── */
 #loading{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 0;gap:14px}
 .spinner{width:34px;height:34px;border:2.5px solid var(--border);border-top-color:var(--coral);border-radius:50%;animation:spin .75s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 #load-txt{font-size:13px;color:var(--muted)}
 #load-n{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace}
 
-/* ── COIN ROW ──────────────────────────────────────────── */
-#coin-list{display:none}
-.crow{display:flex;align-items:center;padding:13px 14px;
-  background:var(--card);border:1px solid var(--border);
-  border-radius:16px;margin-bottom:8px;cursor:pointer;
-  transition:transform .15s;position:relative;overflow:hidden;gap:10px}
-.crow:active{transform:scale(.98)}
-/* signal left bar */
-.crow::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:16px 0 0 16px;opacity:0}
-.crow.sLONG::before{background:var(--long);opacity:1}
-.crow.sSHORT::before{background:var(--short);opacity:1}
+/* ── COIN GRID ── */
+#coin-list{display:none;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#coin-list.hidden{display:none}
 
-/* symbol col */
-.csym{flex-shrink:0;width:52px}
-.csym-name{font-size:15px;font-weight:700;letter-spacing:-.3px}
-.csym-full{font-size:10px;color:var(--muted);margin-top:1px}
+.ccard{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:14px 13px;cursor:pointer;transition:transform .15s;position:relative;overflow:hidden}
+.ccard:active{transform:scale(.97)}
+/* top color bar */
+.ccard::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:18px 18px 0 0;opacity:0}
+.ccard.sLONG::before{background:var(--long);opacity:1}
+.ccard.sSHORT::before{background:var(--short);opacity:1}
+.ccard.sWATCH::before{background:var(--watch);opacity:1}
 
-/* spark col */
-.cspark{flex:1;min-width:0}
-
-/* indicators col */
-.cinds{flex-shrink:0;display:flex;flex-direction:column;gap:4px;align-items:flex-end}
-.ind-row{display:flex;gap:5px;align-items:center}
-.ibadge{font-family:'DM Mono',monospace;font-size:10px;font-weight:500;
-  padding:2px 7px;border-radius:6px;background:rgba(0,0,0,.05);color:var(--soft)}
-
-/* price col */
-.cprice{flex-shrink:0;text-align:right;min-width:72px}
-.cprice-val{font-family:'DM Mono',monospace;font-size:13px;font-weight:500}
-.cprice-chg{font-size:11px;font-weight:600;margin-top:2px}
+.cc-sym{font-size:16px;font-weight:700;letter-spacing:-.3px;margin-bottom:1px}
+.cc-name{font-size:10px;color:var(--muted);margin-bottom:10px}
+.cc-price{font-family:'DM Mono',monospace;font-size:14px;font-weight:500;margin-bottom:3px}
+.cc-chg{font-size:11px;font-weight:600;margin-bottom:10px}
 .up{color:var(--long)}.dn{color:var(--short)}
 
+/* indicator rows */
+.cc-inds{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
+.cc-ind{display:flex;justify-content:space-between;align-items:center;font-size:11px}
+.cc-ind-lbl{color:var(--muted);font-family:'DM Mono',monospace}
+.cc-ind-val{font-family:'DM Mono',monospace;font-weight:600}
+
 /* signal pill */
-.spill{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;border:1px solid;letter-spacing:.2px}
+.spill{display:inline-block;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;border:1px solid}
 .spill.LONG{background:rgba(40,168,112,.13);color:var(--long);border-color:rgba(40,168,112,.3)}
 .spill.SHORT{background:rgba(224,72,88,.1);color:var(--short);border-color:rgba(224,72,88,.25)}
 .spill.WATCH{background:rgba(212,144,58,.1);color:var(--watch);border-color:rgba(212,144,58,.25)}
 .spill.HOLD{background:rgba(0,0,0,.04);color:var(--muted);border-color:var(--border)}
 
-/* ── DETAIL PANEL ──────────────────────────────────────── */
+/* ── DETAIL PANEL ── */
 #ovl{display:none;position:fixed;inset:0;background:rgba(34,26,22,.38);backdrop-filter:blur(5px);z-index:100}
-#dpanel{display:none;position:fixed;bottom:0;left:0;right:0;z-index:101;
-  background:var(--bg);border-radius:22px 22px 0 0;max-height:92vh;
-  overflow-y:auto;box-shadow:0 -10px 48px rgba(0,0,0,.14);
-  animation:sup .3s cubic-bezier(.32,.72,0,1)}
+#dpanel{display:none;position:fixed;bottom:0;left:0;right:0;z-index:101;background:var(--bg);border-radius:22px 22px 0 0;max-height:92vh;overflow-y:auto;box-shadow:0 -10px 48px rgba(0,0,0,.14);padding-bottom:40px;animation:sup .28s cubic-bezier(.32,.72,0,1)}
 @keyframes sup{from{transform:translateY(100%)}to{transform:translateY(0)}}
 .dhandle{width:34px;height:4px;background:var(--border);border-radius:2px;margin:11px auto 14px;cursor:pointer}
 
-/* panel header */
 .dhead{padding:0 18px 14px;border-bottom:1px solid var(--border)}
-.dhead-row{display:flex;justify-content:space-between;align-items:flex-start}
 .dsym{font-size:22px;font-weight:700;letter-spacing:-.4px}
 .dsym span{color:var(--muted);font-size:14px}
-.dname{font-size:12px;color:var(--muted);margin-top:2px;margin-bottom:8px}
+.dname{font-size:12px;color:var(--muted);margin:2px 0 8px}
+.dprice-row{display:flex;align-items:baseline;gap:10px}
 .dprice{font-family:'DM Mono',monospace;font-size:24px;font-weight:500}
 .dchg{font-size:13px;font-weight:600}
 
-/* panel body */
 .dbody{padding:16px 18px 10px}
 
-/* trend */
-.trbadge{display:inline-flex;align-items:center;gap:5px;padding:5px 13px;
-  border-radius:20px;font-size:12px;font-weight:600;margin-bottom:14px}
+.trbadge{display:inline-flex;align-items:center;gap:5px;padding:5px 13px;border-radius:20px;font-size:12px;font-weight:600;margin-bottom:14px}
 .trbadge.BULL{background:rgba(40,168,112,.1);color:var(--long)}
 .trbadge.BEAR{background:rgba(224,72,88,.08);color:var(--short)}
 .trbadge.NEUTRAL{background:rgba(0,0,0,.05);color:var(--muted)}
 
-/* indicator boxes */
 .iboxes{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
 .ibox{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:11px 8px;text-align:center}
 .ibox-lbl{font-size:10px;color:var(--muted);margin-bottom:3px}
-.ibox-val{font-family:'DM Mono',monospace;font-size:19px;font-weight:600}
+.ibox-val{font-family:'DM Mono',monospace;font-size:20px;font-weight:600}
+
+/* analysis card */
+.ana-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:13px;margin-bottom:14px}
+.ana-title{font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.4px;text-transform:uppercase;margin-bottom:10px}
+.ana-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px}
+.ana-row:last-child{border-bottom:none}
+.ana-row-lbl{color:var(--soft)}
+.ana-row-val{font-weight:600;font-family:'DM Mono',monospace}
 
 /* signal card */
-.sigcard{border-radius:14px;border:1px solid;padding:13px;margin-bottom:16px}
+.sigcard{border-radius:14px;border:1px solid;padding:14px;margin-bottom:14px}
 .sigcard.LONG{background:linear-gradient(135deg,rgba(40,168,112,.08),rgba(40,168,112,.04));border-color:rgba(40,168,112,.25)}
 .sigcard.SHORT{background:linear-gradient(135deg,rgba(224,72,88,.08),rgba(224,72,88,.04));border-color:rgba(224,72,88,.2)}
-.sch{display:flex;align-items:center;gap:7px;margin-bottom:9px}
-.sch-emoji{font-size:15px}
-.sch-title{font-size:13px;font-weight:700}
-.sch-title.LONG{color:var(--long)}.sch-title.SHORT{color:var(--short)}
-.sprices{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:9px}
-.spitem{text-align:center}
-.splbl{font-size:10px;color:var(--muted);margin-bottom:2px}
-.spval{font-family:'DM Mono',monospace;font-size:12px;font-weight:600}
-.spval.e{color:var(--text)}.spval.s{color:var(--short)}.spval.t{color:var(--long)}
-.sreason{font-size:11.5px;color:var(--soft);line-height:1.55;padding-top:8px;border-top:1px solid var(--border)}
+.sc-head{display:flex;align-items:center;gap:7px;margin-bottom:10px}
+.sc-emoji{font-size:16px}
+.sc-title{font-size:13px;font-weight:700}
+.sc-title.LONG{color:var(--long)}.sc-title.SHORT{color:var(--short)}
+.sc-prices{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.sc-pitem{text-align:center}
+.sc-plbl{font-size:10px;color:var(--muted);margin-bottom:2px}
+.sc-pval{font-family:'DM Mono',monospace;font-size:13px;font-weight:600}
+.sc-pval.e{color:var(--text)}.sc-pval.s{color:var(--short)}.sc-pval.t{color:var(--long)}
+.sc-reason{font-size:12px;color:var(--soft);line-height:1.55;padding-top:9px;border-top:1px solid var(--border)}
+.sc-meta{font-size:10.5px;color:var(--muted);margin-top:4px}
 
-/* K line section */
-.sec-lbl{font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.4px;text-transform:uppercase;margin-bottom:8px}
-.kframe{border-radius:14px;overflow:hidden;border:1px solid var(--border);background:#f8f0eb}
-.kframe iframe{width:100%;height:320px;border:none;display:block}
-
-.dwarn{font-size:10px;color:var(--muted);text-align:center;margin-top:14px;padding-bottom:4px}
+.dwarn{font-size:10px;color:var(--muted);text-align:center;margin-top:14px}
 </style>
 </head>
 <body>
@@ -189,28 +164,28 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
     <div id="load-txt">載入幣種資料中…</div>
     <div id="load-n">0 / 20</div>
   </div>
-  <div id="coin-list"></div>
+  <div id="coin-list" class="hidden"></div>
 </div>
 
 <div id="ovl" onclick="closeP()"></div>
 <div id="dpanel">
   <div class="dhandle" onclick="closeP()"></div>
-  <div id="dpcontent"></div>
+  <div id="dpc"></div>
 </div>
 
 <script>
 const SYMS=["BTCUSDT","ETHUSDT","BNBUSDT","SOLUSDT","XRPUSDT","DOGEUSDT","ADAUSDT","AVAXUSDT","TRXUSDT","DOTUSDT","LINKUSDT","LTCUSDT","UNIUSDT","ATOMUSDT","APTUSDT","INJUSDT","ARBUSDT","OPUSDT","SUIUSDT","NEARUSDT"];
 const NM={BTCUSDT:"Bitcoin",ETHUSDT:"Ethereum",BNBUSDT:"BNB",SOLUSDT:"Solana",XRPUSDT:"XRP",DOGEUSDT:"Dogecoin",ADAUSDT:"Cardano",AVAXUSDT:"Avalanche",TRXUSDT:"TRON",DOTUSDT:"Polkadot",LINKUSDT:"Chainlink",LTCUSDT:"Litecoin",UNIUSDT:"Uniswap",ATOMUSDT:"Cosmos",APTUSDT:"Aptos",INJUSDT:"Injective",ARBUSDT:"Arbitrum",OPUSDT:"Optimism",SUIUSDT:"Sui",NEARUSDT:"NEAR"};
-const SL=0.03,TP=0.06;
+const SLP=0.03,TPP=0.06;
 let D={},flt="ALL";
 
-// ── Bybit fetch ──────────────────────────────────────────
+// Bybit API
 async function bk(sym,iv,lim){
   try{
     const r=await fetch(`https://api.bybit.com/v5/market/kline?category=linear&symbol=${sym}&interval=${iv}&limit=${lim}`);
     const j=await r.json();if(j.retCode!==0)return null;
     const l=j.result.list.reverse();
-    return{c:l.map(k=>parseFloat(k[4])),h:l.map(k=>parseFloat(k[2])),lo:l.map(k=>parseFloat(k[3])),v:l.map(k=>parseFloat(k[5]))};
+    return{c:l.map(k=>parseFloat(k[4])),h:l.map(k=>parseFloat(k[2])),lo:l.map(k=>parseFloat(k[3]))};
   }catch{return null;}
 }
 async function bt(sym){
@@ -221,20 +196,21 @@ async function bt(sym){
   }catch{return null;}
 }
 
-// ── Indicators ───────────────────────────────────────────
+// Indicators
 const ma=(a,n)=>a.length<n?null:a.slice(-n).reduce((x,y)=>x+y,0)/n;
-function rsi(c,p=14){
+function calcRSI(c,p=14){
   if(c.length<p*3)return null;
   let g=0,l=0;
   for(let i=1;i<=p;i++){const d=c[i]-c[i-1];if(d>0)g+=d;else l-=d;}
   let ag=g/p,al=l/p;
   for(let i=p+1;i<c.length;i++){
     const d=c[i]-c[i-1];
-    ag=(ag*(p-1)+(d>0?d:0))/p;al=(al*(p-1)+(d<0?-d:0))/p;
+    ag=(ag*(p-1)+(d>0?d:0))/p;
+    al=(al*(p-1)+(d<0?-d:0))/p;
   }
   return al===0?100:parseFloat((100-100/(1+ag/al)).toFixed(1));
 }
-function kd(h,lo,c,p=9,sk=3,sd=3){
+function calcKD(h,lo,c,p=9,sk=3,sd=3){
   if(c.length<p+10)return null;
   const rk=[];
   for(let i=p-1;i<c.length;i++){
@@ -246,126 +222,127 @@ function kd(h,lo,c,p=9,sk=3,sd=3){
   const da=[ka[0]];for(let i=1;i<ka.length;i++)da.push(ka[i]*dm+da[i-1]*(1-dm));
   return{k:+ka[ka.length-1].toFixed(1),d:+da[da.length-1].toFixed(1),pk:+ka[ka.length-2].toFixed(1),pd:+da[da.length-2].toFixed(1)};
 }
-function sig(c){
+function buildSig(c){
   if(!c||!c.rsi||!c.kd)return{s:"HOLD"};
   const{rsi:r,kd:k,tr,price:p}=c;
-  const gx=k.pk<=k.pd&&k.k>k.d,dx=k.pk>=k.pd&&k.k<k.d;
+  const gx=k.pk<=k.pd&&k.k>k.d;
+  const dx=k.pk>=k.pd&&k.k<k.d;
   if(gx&&k.k<30&&k.d<30&&r<40&&tr!=="BEAR")
-    return{s:"LONG",sl:+(p*(1-SL)).toFixed(4),tp:+(p*(1+TP)).toFixed(4),reason:`KD金叉（K=${k.k} 穿越 D=${k.d}）+ RSI超賣 ${r}`,type:"KD金叉反彈"};
+    return{s:"LONG",sl:+(p*(1-SLP)).toFixed(4),tp:+(p*(1+TPP)).toFixed(4),
+      reason:`KD金叉（K=${k.k} 穿越 D=${k.d}）\nRSI超賣 ${r}，反彈機率高`,type:"KD金叉反彈"};
   if(dx&&k.k>70&&k.d>70&&r>60&&tr!=="BULL")
-    return{s:"SHORT",sl:+(p*(1+SL)).toFixed(4),tp:+(p*(1-TP)).toFixed(4),reason:`KD死叉（K=${k.k} 跌破 D=${k.d}）+ RSI超買 ${r}`,type:"KD死叉反壓"};
+    return{s:"SHORT",sl:+(p*(1+SLP)).toFixed(4),tp:+(p*(1-TPP)).toFixed(4),
+      reason:`KD死叉（K=${k.k} 跌破 D=${k.d}）\nRSI超買 ${r}，回調風險高`,type:"KD死叉反壓"};
   if((k.k<35&&r<45)||(k.k>65&&r>55))return{s:"WATCH"};
   return{s:"HOLD"};
 }
 
-// ── Format ───────────────────────────────────────────────
 const fmt=n=>{if(!n&&n!==0)return"—";if(n<0.001)return n.toFixed(6);if(n<1)return n.toFixed(4);if(n<100)return n.toFixed(3);return n.toLocaleString("en-US",{maximumFractionDigits:2})};
+const rsiC=r=>!r?"#c4a898":r<35?"#28a870":r>65?"#e04858":"#d4903a";
+const kdC=k=>!k?"#c4a898":k<30?"#28a870":k>70?"#e04858":"#c4a898";
+const SL2={LONG:"▲ 做多",SHORT:"▼ 做空",WATCH:"◎ 觀望",HOLD:"— 持有"};
+const TR={BULL:"↑ 日線多頭",BEAR:"↓ 日線空頭",NEUTRAL:"→ 日線中性"};
 
-// ── Sparkline ─────────────────────────────────────────────
-function spark(c,ch){
-  const pts=c.slice(-40);
-  const mn=Math.min(...pts),mx=Math.max(...pts),rg=mx-mn||1;
-  const col=ch>=0?"#28a870":"#e04858";
-  const coords=pts.map((p,i)=>`${(i/(pts.length-1))*100},${32-((p-mn)/rg)*28-2}`).join(" ");
-  return`<svg width="100%" height="36" viewBox="0 0 100 36" preserveAspectRatio="none"><polyline points="${coords}" fill="none" stroke="${col}" stroke-width="1.6" stroke-linejoin="round" opacity="0.8"/></svg>`;
-}
-
-// ── Render list ───────────────────────────────────────────
+// Render grid
 function render(){
-  const all=SYMS.map(s=>({s,...D[s]&&{sig:sig(D[s])}})||{s,sig:{s:"HOLD"}});
-  const ls=all.filter(x=>x.sig?.s==="LONG");
-  const ss=all.filter(x=>x.sig?.s==="LONG"||x.sig?.s==="SHORT");
-
-  // counts
+  const all=SYMS.map(s=>{const c=D[s];return{s,c,sg:c?buildSig(c):{s:"HOLD"}};});
+  const ls=all.filter(x=>x.sg.s==="LONG");
+  const ss2=all.filter(x=>x.sg.s==="SHORT");
+  const ws=all.filter(x=>x.sg.s==="WATCH");
   document.getElementById("ca").textContent=`(${all.length})`;
   document.getElementById("cl").textContent=ls.length?`(${ls.length})`:"";
-  document.getElementById("cs").textContent=all.filter(x=>x.sig?.s==="SHORT").length?`(${all.filter(x=>x.sig?.s==="SHORT").length})`:"";
-  document.getElementById("cw").textContent=all.filter(x=>x.sig?.s==="WATCH").length?`(${all.filter(x=>x.sig?.s==="WATCH").length})`:"";
-
-  // banner
+  document.getElementById("cs").textContent=ss2.length?`(${ss2.length})`:"";
+  document.getElementById("cw").textContent=ws.length?`(${ws.length})`:"";
   const bn=document.getElementById("banner");
   if(ls.length){bn.style.display="block";bn.textContent="✦ 做多信號："+ls.map(x=>x.s.replace("USDT","")).join("・");}
   else bn.style.display="none";
 
-  const show=flt==="ALL"?SYMS:SYMS.filter(s=>{const x=D[s];if(!x)return false;return sig(x).s===flt;});
-
-  const SL2={LONG:"▲ 做多",SHORT:"▼ 做空",WATCH:"◎ 觀望",HOLD:"— 持有"};
-  const rsiC=r=>!r?"#c4a898":r<35?"#28a870":r>65?"#e04858":"#d4903a";
-  const kdC=k=>!k?"#c4a898":k<30?"#28a870":k>70?"#e04858":"#c4a898";
-
-  document.getElementById("coin-list").innerHTML=show.map(sym=>{
-    const c=D[sym];if(!c)return"";
-    const sg=sig(c);const up=c.change24h>=0;
-    return`<div class="crow s${sg.s}" onclick="openP('${sym}')">
-      <div class="csym"><div class="csym-name">${sym.replace("USDT","")}</div><div class="csym-full">${NM[sym]?.slice(0,8)||""}</div></div>
-      <div class="cspark">${c.closes15?spark(c.closes15,c.change24h):""}</div>
-      <div class="cinds">
-        <div class="ind-row">
-          <span class="ibadge" style="color:${rsiC(c.rsi)}">RSI ${c.rsi||"…"}</span>
+  const show=flt==="ALL"?all:all.filter(x=>x.sg.s===flt);
+  document.getElementById("coin-list").innerHTML=show.map(({s,c,sg})=>{
+    if(!c)return`<div class="ccard"><div class="cc-sym">${s.replace("USDT","")}</div><div style="font-size:11px;color:#c4a898;margin-top:8px">載入中…</div></div>`;
+    const up=c.change24h>=0;
+    return`<div class="ccard s${sg.s}" onclick="openP('${s}')">
+      <div class="cc-sym">${s.replace("USDT","")}</div>
+      <div class="cc-name">${NM[s]||""}</div>
+      <div class="cc-price">$${fmt(c.price)}</div>
+      <div class="cc-chg ${up?"up":"dn"}">${up?"+":""}${c.change24h?.toFixed(2)}%</div>
+      <div class="cc-inds">
+        <div class="cc-ind">
+          <span class="cc-ind-lbl">RSI</span>
+          <span class="cc-ind-val" style="color:${rsiC(c.rsi)}">${c.rsi||"…"}</span>
         </div>
-        <div class="ind-row">
-          <span class="ibadge" style="color:${kdC(c.kd?.k)}">K ${c.kd?.k||"…"}</span>
-          <span class="ibadge">D ${c.kd?.d||"…"}</span>
+        <div class="cc-ind">
+          <span class="cc-ind-lbl">K</span>
+          <span class="cc-ind-val" style="color:${kdC(c.kd?.k)}">${c.kd?.k||"…"}</span>
         </div>
-        <span class="spill ${sg.s}">${SL2[sg.s]}</span>
+        <div class="cc-ind">
+          <span class="cc-ind-lbl">D</span>
+          <span class="cc-ind-val">${c.kd?.d||"…"}</span>
+        </div>
       </div>
-      <div class="cprice">
-        <div class="cprice-val">$${fmt(c.price)}</div>
-        <div class="cprice-chg ${up?"up":"dn"}">${up?"+":""}${c.change24h?.toFixed(2)}%</div>
-      </div>
+      <span class="spill ${sg.s}">${SL2[sg.s]}</span>
     </div>`;
   }).join("");
-
   document.getElementById("upd").textContent=new Date().toLocaleTimeString("zh-TW");
 }
 
-// ── Detail panel ──────────────────────────────────────────
+// Detail panel
 function openP(sym){
   const c=D[sym];if(!c)return;
-  const sg=sig(c);const up=c.change24h>=0;
-  const rc=r=>!r?"#c4a898":r<35?"#28a870":r>65?"#e04858":"#d4903a";
-  const kc=k=>!k?"#c4a898":k<30?"#28a870":k>70?"#e04858":"#c4a898";
-  const tr={BULL:"↑ 日線多頭",BEAR:"↓ 日線空頭",NEUTRAL:"→ 日線中性"};
+  const sg=buildSig(c);const up=c.change24h>=0;
+
+  // Analysis rows
+  const gx=c.kd?c.kd.pk<=c.kd.pd&&c.kd.k>c.kd.d:false;
+  const dx=c.kd?c.kd.pk>=c.kd.pd&&c.kd.k<c.kd.d:false;
+  const anaRows=[
+    ["RSI (14)",`${c.rsi||"—"}`,c.rsi<35?"超賣區":c.rsi>65?"超買區":"中性區"],
+    ["KD · K值",`${c.kd?.k||"—"}`,c.kd?.k<30?"超賣區":c.kd?.k>70?"超買區":"中性"],
+    ["KD · D值",`${c.kd?.d||"—"}`,""],
+    ["KD 狀態",gx?"金叉 ✅":dx?"死叉 ⚠️":"無交叉",""],
+    ["日線趨勢",c.tr==="BULL"?"多頭 ✅":c.tr==="BEAR"?"空頭 ❌":"中性",""],
+  ];
 
   let sigHTML="";
   if(sg.s==="LONG"||sg.s==="SHORT"){
     const em=sg.s==="LONG"?"🟢":"🔴";
     const ttl=sg.s==="LONG"?"做多 ▲ 信號":"做空 ▼ 信號";
-    sigHTML=`<div class="sec-lbl" style="margin-bottom:8px">進場信號</div>
+    sigHTML=`
     <div class="sigcard ${sg.s}">
-      <div class="sch"><span class="sch-emoji">${em}</span><span class="sch-title ${sg.s}">${ttl} ｜ ${sym.replace("USDT","")}/USDT 永續</span></div>
-      <div class="sprices">
-        <div class="spitem"><div class="splbl">📍 進場價</div><div class="spval e" style="font-size:14px">$${fmt(c.price)}</div></div>
-        <div class="spitem"><div class="splbl">🛑 止損 -3%</div><div class="spval s">$${fmt(sg.sl)}</div></div>
-        <div class="spitem"><div class="splbl">🎯 止盈 +6%</div><div class="spval t">$${fmt(sg.tp)}</div></div>
+      <div class="sc-head"><span class="sc-emoji">${em}</span><span class="sc-title ${sg.s}">${ttl} ｜ ${sym.replace("USDT","")}/USDT 永續</span></div>
+      <div class="sc-prices">
+        <div class="sc-pitem"><div class="sc-plbl">📍 進場價</div><div class="sc-pval e" style="font-size:14px">$${fmt(c.price)}</div></div>
+        <div class="sc-pitem"><div class="sc-plbl">🛑 止損 -3%</div><div class="sc-pval s">$${fmt(sg.sl)}</div></div>
+        <div class="sc-pitem"><div class="sc-plbl">🎯 止盈 +6%</div><div class="sc-pval t">$${fmt(sg.tp)}</div></div>
       </div>
-      <div class="sreason"><strong>進場依據：</strong>${sg.reason}<br><span style="font-size:10.5px;color:#c4a898">策略：${sg.type} ｜ 1小時K線</span></div>
+      <div class="sc-reason"><strong>進場依據：</strong><br>${sg.reason.replace(/\n/g,"<br>")}</div>
+      <div class="sc-meta">⏰ 策略：${sg.type} ｜ 1小時K線 ｜ 止損3% 止盈6%</div>
+    </div>`;
+  } else {
+    sigHTML=`<div style="background:rgba(0,0,0,.04);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:14px;text-align:center">
+      <div style="font-size:13px;color:var(--muted);margin-bottom:4px">${sg.s==="WATCH"?"👀 觀望中":"⏸ 目前無信號"}</div>
+      <div style="font-size:11px;color:var(--muted)">${sg.s==="WATCH"?"指標接近關鍵區間，持續觀察中":"尚未達到進場條件，等待KD金叉/死叉"}</div>
     </div>`;
   }
 
-  // TradingView — 用 widget URL 方式，相容性更好
-  const tvSym=`BYBIT:${sym.replace("USDT","")}USDT.P`;
-  const tvUrl=`https://www.tradingview.com/chart/?symbol=${tvSym}&interval=60&theme=dark&style=1&hide_side_toolbar=1&hide_top_toolbar=0&save_image=0&locale=zh_TW`;
-
-  document.getElementById("dpcontent").innerHTML=`
+  document.getElementById("dpc").innerHTML=`
     <div class="dhead">
-      <div class="dhead-row">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
         <div><div class="dsym">${sym.replace("USDT","")}<span>/USDT</span></div><div class="dname">${NM[sym]||""} · 永續合約</div></div>
         <div style="text-align:right"><div class="dprice">$${fmt(c.price)}</div><div class="dchg ${up?"up":"dn"}">${up?"+":""}${c.change24h?.toFixed(2)}%</div></div>
       </div>
     </div>
     <div class="dbody">
-      <div class="trbadge ${c.tr||"NEUTRAL"}">${tr[c.tr||"NEUTRAL"]}</div>
-      <div class="iboxes">
-        <div class="ibox"><div class="ibox-lbl">RSI (14)</div><div class="ibox-val" style="color:${rc(c.rsi)}">${c.rsi||"—"}</div></div>
-        <div class="ibox"><div class="ibox-lbl">KD · K值</div><div class="ibox-val" style="color:${kc(c.kd?.k)}">${c.kd?.k||"—"}</div></div>
-        <div class="ibox"><div class="ibox-lbl">KD · D值</div><div class="ibox-val">${c.kd?.d||"—"}</div></div>
+      <div class="trbadge ${c.tr||"NEUTRAL"}">${TR[c.tr||"NEUTRAL"]}</div>
+
+      <div class="ana-card">
+        <div class="ana-title">技術指標分析</div>
+        ${anaRows.map(([l,v,note])=>`<div class="ana-row">
+          <span class="ana-row-lbl">${l}</span>
+          <span class="ana-row-val">${v}${note?` <span style="font-size:10px;font-weight:400;color:var(--muted)">· ${note}</span>`:""}</span>
+        </div>`).join("")}
       </div>
+
       ${sigHTML}
-      <div class="sec-lbl">K線圖（1小時 · Bybit）</div>
-      <div class="kframe">
-        <iframe src="${tvUrl}" scrolling="no" allowtransparency="true" allowfullscreen="false" frameborder="0"></iframe>
-      </div>
       <div class="dwarn">⚠️ 以上僅供參考，不構成投資建議。加密貨幣具高度風險，請謹慎評估。</div>
     </div>`;
 
@@ -385,13 +362,12 @@ function setF(m,el){
   render();
 }
 
-// ── Load ─────────────────────────────────────────────────
+// Load data
 async function load(sym,i){
   const[h1,dy,tk]=await Promise.all([bk(sym,"60",500),bk(sym,"D",50),bt(sym)]);
   if(!h1||!dy||!tk)return;
   const dm13=ma(dy.c,13),dm34=ma(dy.c,34);
-  D[sym]={price:tk.p,change24h:tk.ch,closes15:h1.c,
-    rsi:rsi(h1.c),kd:kd(h1.h,h1.lo,h1.c),
+  D[sym]={price:tk.p,change24h:tk.ch,rsi:calcRSI(h1.c),kd:calcKD(h1.h,h1.lo,h1.c),
     tr:dm13&&dm34?(dm13>dm34*1.02?"BULL":dm13<dm34*0.98?"BEAR":"NEUTRAL"):"NEUTRAL"};
   document.getElementById("load-n").textContent=`${i+1} / ${SYMS.length}`;
   document.getElementById("pgfill").style.width=`${((i+1)/SYMS.length)*100}%`;
@@ -405,16 +381,15 @@ async function init(){
   }
   document.getElementById("pgwrap").style.display="none";
   document.getElementById("loading").style.display="none";
-  document.getElementById("coin-list").style.display="block";
+  const cl=document.getElementById("coin-list");
+  cl.classList.remove("hidden");
   render();
 
-  // 每30秒更新價格
   setInterval(async()=>{
     await Promise.all(SYMS.map(async s=>{const t=await bt(s);if(t&&D[s]){D[s].price=t.p;D[s].change24h=t.ch;}}));
     render();
   },30000);
 
-  // 每15分鐘重算指標
   setInterval(async()=>{
     for(let i=0;i<SYMS.length;i++){await load(SYMS[i],i);await new Promise(r=>setTimeout(r,180));}
     render();
