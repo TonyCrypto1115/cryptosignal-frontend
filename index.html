@@ -7,47 +7,41 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
 :root{
-  --bg:#fdf7f2;
-  --card:#ffffff;
-  --border:rgba(200,168,148,0.18);
-  --text:#221a16;
-  --soft:#8a6e62;
-  --muted:#c4a898;
-  --coral:#e06050;
-  --rose:#c8506a;
-  --long:#28a870;
-  --short:#e04858;
-  --watch:#d4903a;
+  --bg:#fdf7f2;--card:#ffffff;--border:rgba(200,168,148,0.18);
+  --text:#221a16;--soft:#8a6e62;--muted:#c4a898;
+  --coral:#e06050;--rose:#c8506a;
+  --long:#28a870;--short:#e04858;--watch:#d4903a;
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
-  background:
-    radial-gradient(ellipse 90% 50% at 5% 5%,rgba(240,155,100,0.22),transparent 55%),
-    radial-gradient(ellipse 70% 60% at 95% 15%,rgba(200,125,155,0.18),transparent 50%),
-    radial-gradient(ellipse 60% 50% at 55% 95%,rgba(115,180,160,0.15),transparent 55%)}
+  background:radial-gradient(ellipse 90% 50% at 5% 5%,rgba(240,155,100,.22),transparent 55%),
+    radial-gradient(ellipse 70% 60% at 95% 15%,rgba(200,125,155,.18),transparent 50%),
+    radial-gradient(ellipse 60% 50% at 55% 95%,rgba(115,180,160,.15),transparent 55%)}
 
 /* ── HEADER ── */
-#hdr{position:sticky;top:0;z-index:50;background:rgba(253,247,242,0.92);backdrop-filter:blur(18px);border-bottom:1px solid var(--border);padding:10px 16px 10px}
-.hdr-row{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;min-height:40px}
+#hdr{position:sticky;top:0;z-index:50;background:rgba(253,247,242,.92);backdrop-filter:blur(18px);border-bottom:1px solid var(--border);padding:14px 16px 10px}
+.hdr-row{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
 #logo{font-size:18px;font-weight:700;letter-spacing:-.4px;background:linear-gradient(135deg,var(--coral),var(--rose));-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1.4}
-#upd{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace}
+#upd{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;padding-top:4px}
 .tabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
 .tabs::-webkit-scrollbar{display:none}
 .tab{flex-shrink:0;padding:4px 14px;border-radius:20px;font-size:12px;font-weight:600;border:1.5px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .15s}
 .tab.on{background:var(--text);color:#fff;border-color:var(--text)}
 .tab.tl{border-color:var(--long);color:var(--long)}.tab.tl.on{background:var(--long);color:#fff}
 .tab.ts{border-color:var(--short);color:var(--short)}.tab.ts.on{background:var(--short);color:#fff}
+.tab.tp{border-color:var(--coral);color:var(--coral)}.tab.tp.on{background:var(--coral);color:#fff}
 
 /* ── PROGRESS ── */
 #pgwrap{height:2px;background:var(--border);display:none}
-#pgfill{height:100%;background:linear-gradient(90deg,#f09060,var(--rose));width:0%;transition:width .25s;border-radius:1px}
+#pgfill{height:100%;background:linear-gradient(90deg,#f09060,var(--rose));width:0%;transition:width .25s}
 
 /* ── BANNER ── */
 #banner{display:none;margin:10px 16px 0;padding:9px 14px;background:rgba(40,168,112,.1);border:1px solid rgba(40,168,112,.25);border-radius:12px;font-size:12px;font-weight:600;color:var(--long)}
 
-/* ── CONTENT ── */
+/* ── PAGES ── */
 #content{position:relative;z-index:1;padding:12px 14px 60px}
+.page{display:none}.page.active{display:block}
 
 /* ── LOADING ── */
 #loading{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 0;gap:14px}
@@ -57,42 +51,35 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 #load-n{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace}
 
 /* ── COIN GRID ── */
-#coin-list{display:none;display:grid;grid-template-columns:1fr 1fr;gap:10px}
-#coin-list.hidden{display:none}
-
+#coin-list{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .ccard{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:14px 13px;cursor:pointer;transition:transform .15s;position:relative;overflow:hidden}
 .ccard:active{transform:scale(.97)}
-/* top color bar */
 .ccard::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:18px 18px 0 0;opacity:0}
 .ccard.sLONG::before{background:var(--long);opacity:1}
 .ccard.sSHORT::before{background:var(--short);opacity:1}
 .ccard.sWATCH::before{background:var(--watch);opacity:1}
-
+.ccard.sHOLDING::before{background:linear-gradient(90deg,var(--long),var(--coral));opacity:1}
 .cc-sym{font-size:16px;font-weight:700;letter-spacing:-.3px;margin-bottom:1px}
 .cc-name{font-size:10px;color:var(--muted);margin-bottom:10px}
 .cc-price{font-family:'DM Mono',monospace;font-size:14px;font-weight:500;margin-bottom:3px}
 .cc-chg{font-size:11px;font-weight:600;margin-bottom:10px}
 .up{color:var(--long)}.dn{color:var(--short)}
-
-/* indicator rows */
 .cc-inds{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
-.cc-ind{display:flex;justify-content:space-between;align-items:center;font-size:11px}
+.cc-ind{display:flex;justify-content:space-between;font-size:11px}
 .cc-ind-lbl{color:var(--muted);font-family:'DM Mono',monospace}
 .cc-ind-val{font-family:'DM Mono',monospace;font-weight:600}
-
-/* signal pill */
 .spill{display:inline-block;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;border:1px solid}
 .spill.LONG{background:rgba(40,168,112,.13);color:var(--long);border-color:rgba(40,168,112,.3)}
 .spill.SHORT{background:rgba(224,72,88,.1);color:var(--short);border-color:rgba(224,72,88,.25)}
 .spill.WATCH{background:rgba(212,144,58,.1);color:var(--watch);border-color:rgba(212,144,58,.25)}
 .spill.HOLD{background:rgba(0,0,0,.04);color:var(--muted);border-color:var(--border)}
+.spill.HOLDING{background:linear-gradient(135deg,rgba(40,168,112,.15),rgba(224,96,80,.1));color:var(--long);border-color:rgba(40,168,112,.3)}
 
 /* ── DETAIL PANEL ── */
 #ovl{display:none;position:fixed;inset:0;background:rgba(34,26,22,.38);backdrop-filter:blur(5px);z-index:100}
 #dpanel{display:none;position:fixed;bottom:0;left:0;right:0;z-index:101;background:var(--bg);border-radius:22px 22px 0 0;max-height:92vh;overflow-y:auto;box-shadow:0 -10px 48px rgba(0,0,0,.14);padding-bottom:40px;animation:sup .28s cubic-bezier(.32,.72,0,1)}
 @keyframes sup{from{transform:translateY(100%)}to{transform:translateY(0)}}
 .dhandle{width:34px;height:4px;background:var(--border);border-radius:2px;margin:11px auto 14px;cursor:pointer}
-
 .dhead{padding:0 18px 14px;border-bottom:1px solid var(--border)}
 .dsym{font-size:22px;font-weight:700;letter-spacing:-.4px}
 .dsym span{color:var(--muted);font-size:14px}
@@ -100,35 +87,29 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 .dprice-row{display:flex;align-items:baseline;gap:10px}
 .dprice{font-family:'DM Mono',monospace;font-size:24px;font-weight:500}
 .dchg{font-size:13px;font-weight:600}
-
 .dbody{padding:16px 18px 10px}
-
 .trbadge{display:inline-flex;align-items:center;gap:5px;padding:5px 13px;border-radius:20px;font-size:12px;font-weight:600;margin-bottom:14px}
 .trbadge.BULL{background:rgba(40,168,112,.1);color:var(--long)}
 .trbadge.BEAR{background:rgba(224,72,88,.08);color:var(--short)}
 .trbadge.NEUTRAL{background:rgba(0,0,0,.05);color:var(--muted)}
-
 .iboxes{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
 .ibox{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:11px 8px;text-align:center}
 .ibox-lbl{font-size:10px;color:var(--muted);margin-bottom:3px}
 .ibox-val{font-family:'DM Mono',monospace;font-size:20px;font-weight:600}
-
-/* analysis card */
 .ana-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:13px;margin-bottom:14px}
 .ana-title{font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.4px;text-transform:uppercase;margin-bottom:10px}
 .ana-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px}
 .ana-row:last-child{border-bottom:none}
 .ana-row-lbl{color:var(--soft)}
 .ana-row-val{font-weight:600;font-family:'DM Mono',monospace}
-
-/* signal card */
 .sigcard{border-radius:14px;border:1px solid;padding:14px;margin-bottom:14px}
 .sigcard.LONG{background:linear-gradient(135deg,rgba(40,168,112,.08),rgba(40,168,112,.04));border-color:rgba(40,168,112,.25)}
 .sigcard.SHORT{background:linear-gradient(135deg,rgba(224,72,88,.08),rgba(224,72,88,.04));border-color:rgba(224,72,88,.2)}
+.sigcard.HOLDING{background:linear-gradient(135deg,rgba(40,168,112,.06),rgba(224,96,80,.04));border-color:rgba(40,168,112,.2)}
 .sc-head{display:flex;align-items:center;gap:7px;margin-bottom:10px}
 .sc-emoji{font-size:16px}
 .sc-title{font-size:13px;font-weight:700}
-.sc-title.LONG{color:var(--long)}.sc-title.SHORT{color:var(--short)}
+.sc-title.LONG{color:var(--long)}.sc-title.SHORT{color:var(--short)}.sc-title.HOLDING{color:var(--long)}
 .sc-prices{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
 .sc-pitem{text-align:center}
 .sc-plbl{font-size:10px;color:var(--muted);margin-bottom:2px}
@@ -136,8 +117,43 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 .sc-pval.e{color:var(--text)}.sc-pval.s{color:var(--short)}.sc-pval.t{color:var(--long)}
 .sc-reason{font-size:12px;color:var(--soft);line-height:1.55;padding-top:9px;border-top:1px solid var(--border)}
 .sc-meta{font-size:10.5px;color:var(--muted);margin-top:4px}
-
+.pnl-live{font-size:12px;font-weight:600;margin-top:6px;padding:5px 10px;border-radius:8px;display:inline-block}
+.pnl-live.pos{background:rgba(40,168,112,.1);color:var(--long)}
+.pnl-live.neg{background:rgba(224,72,88,.1);color:var(--short)}
 .dwarn{font-size:10px;color:var(--muted);text-align:center;margin-top:14px}
+
+/* ── PERFORMANCE PAGE ── */
+.perf-header{margin-bottom:16px}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.stat-box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px;text-align:center}
+.stat-lbl{font-size:11px;color:var(--muted);margin-bottom:4px}
+.stat-val{font-family:'DM Mono',monospace;font-size:22px;font-weight:700}
+.stat-val.green{color:var(--long)}.stat-val.red{color:var(--short)}.stat-val.gold{color:var(--watch)}
+
+.winrate-bar{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:16px}
+.wr-title{font-size:12px;color:var(--muted);margin-bottom:10px;font-weight:600}
+.wr-bar-wrap{display:flex;height:8px;border-radius:4px;overflow:hidden;margin-bottom:8px}
+.wr-bar-win{background:var(--long);transition:width .5s}
+.wr-bar-loss{background:var(--short);flex:1}
+.wr-legend{display:flex;justify-content:space-between;font-size:11px}
+
+.sig-history{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden}
+.sig-history-title{padding:13px 14px;font-size:12px;font-weight:600;color:var(--muted);border-bottom:1px solid var(--border);letter-spacing:.3px;text-transform:uppercase}
+.sig-row{display:flex;align-items:center;padding:11px 14px;border-bottom:1px solid var(--border);gap:10px;font-size:12px}
+.sig-row:last-child{border-bottom:none}
+.sig-row-dir{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.sig-row-dir.LONG{background:rgba(40,168,112,.15)}
+.sig-row-dir.SHORT{background:rgba(224,72,88,.12)}
+.sig-row-info{flex:1;min-width:0}
+.sig-row-sym{font-weight:700;font-size:13px}
+.sig-row-date{font-size:10px;color:var(--muted);margin-top:1px}
+.sig-row-price{text-align:right;font-family:'DM Mono',monospace;font-size:11px;color:var(--soft)}
+.sig-row-result{flex-shrink:0;text-align:right}
+.result-badge{padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700}
+.result-badge.WIN{background:rgba(40,168,112,.13);color:var(--long)}
+.result-badge.LOSS{background:rgba(224,72,88,.1);color:var(--short)}
+.result-badge.OPEN{background:rgba(212,144,58,.1);color:var(--watch)}
+.empty-state{padding:40px;text-align:center;color:var(--muted);font-size:13px}
 </style>
 </head>
 <body>
@@ -148,10 +164,10 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
     <div id="upd">載入中…</div>
   </div>
   <div class="tabs">
-    <button class="tab on" onclick="setF('ALL',this)">全部 <span id="ca"></span></button>
-    <button class="tab tl" onclick="setF('LONG',this)">做多 <span id="cl"></span></button>
-    <button class="tab ts" onclick="setF('SHORT',this)">做空 <span id="cs"></span></button>
-    <button class="tab" onclick="setF('WATCH',this)">觀望 <span id="cw"></span></button>
+    <button class="tab on"  onclick="setTab('market',this)">市場</button>
+    <button class="tab tl"  onclick="setTab('long',this)">做多 <span id="cl"></span></button>
+    <button class="tab ts"  onclick="setTab('short',this)">做空 <span id="cs"></span></button>
+    <button class="tab tp"  onclick="setTab('perf',this)">📊 績效</button>
   </div>
 </div>
 
@@ -164,9 +180,52 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
     <div id="load-txt">載入幣種資料中…</div>
     <div id="load-n">0 / 20</div>
   </div>
-  <div id="coin-list" class="hidden"></div>
+
+  <!-- 市場頁 -->
+  <div class="page active" id="page-market">
+    <div id="coin-list"></div>
+  </div>
+
+  <!-- 做多篩選 -->
+  <div class="page" id="page-long">
+    <div id="coin-list-long"></div>
+  </div>
+
+  <!-- 做空篩選 -->
+  <div class="page" id="page-short">
+    <div id="coin-list-short"></div>
+  </div>
+
+  <!-- 績效頁 -->
+  <div class="page" id="page-perf">
+    <div class="stat-grid">
+      <div class="stat-box"><div class="stat-lbl">總信號數</div><div class="stat-val" id="p-total">—</div></div>
+      <div class="stat-box"><div class="stat-lbl">勝率</div><div class="stat-val gold" id="p-wr">—</div></div>
+      <div class="stat-box"><div class="stat-lbl">獲利筆數</div><div class="stat-val green" id="p-win">—</div></div>
+      <div class="stat-box"><div class="stat-lbl">虧損筆數</div><div class="stat-val red" id="p-loss">—</div></div>
+    </div>
+    <div class="winrate-bar">
+      <div class="wr-title">勝率分佈</div>
+      <div class="wr-bar-wrap">
+        <div class="wr-bar-win" id="p-bar" style="width:0%"></div>
+        <div class="wr-bar-loss"></div>
+      </div>
+      <div class="wr-legend">
+        <span style="color:var(--long)">✅ 止盈</span>
+        <span style="color:var(--short)">❌ 止損</span>
+      </div>
+    </div>
+    <div class="sig-history">
+      <div class="sig-history-title">歷史信號紀錄</div>
+      <div id="p-history"></div>
+    </div>
+    <div style="font-size:10px;color:var(--muted);text-align:center;margin-top:14px;padding-bottom:4px">
+      ⚠️ 以上僅供參考，不構成投資建議。加密貨幣具高度風險，請謹慎評估。
+    </div>
+  </div>
 </div>
 
+<!-- Detail panel -->
 <div id="ovl" onclick="closeP()"></div>
 <div id="dpanel">
   <div class="dhandle" onclick="closeP()"></div>
@@ -174,12 +233,31 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 </div>
 
 <script>
+// ── 常數 ────────────────────────────────────────────────
 const SYMS=["BTCUSDT","ETHUSDT","BNBUSDT","SOLUSDT","XRPUSDT","DOGEUSDT","ADAUSDT","AVAXUSDT","TRXUSDT","DOTUSDT","LINKUSDT","LTCUSDT","UNIUSDT","ATOMUSDT","APTUSDT","INJUSDT","ARBUSDT","OPUSDT","SUIUSDT","NEARUSDT"];
 const NM={BTCUSDT:"Bitcoin",ETHUSDT:"Ethereum",BNBUSDT:"BNB",SOLUSDT:"Solana",XRPUSDT:"XRP",DOGEUSDT:"Dogecoin",ADAUSDT:"Cardano",AVAXUSDT:"Avalanche",TRXUSDT:"TRON",DOTUSDT:"Polkadot",LINKUSDT:"Chainlink",LTCUSDT:"Litecoin",UNIUSDT:"Uniswap",ATOMUSDT:"Cosmos",APTUSDT:"Aptos",INJUSDT:"Injective",ARBUSDT:"Arbitrum",OPUSDT:"Optimism",SUIUSDT:"Sui",NEARUSDT:"NEAR"};
-const SLP=0.03,TPP=0.06;
-let D={},flt="ALL";
+const SLP=0.03, TPP=0.06;
+const SUPABASE_URL="https://blivdibgijnpoeumfloe.supabase.co";
+const SUPABASE_KEY="sb_publishable_TVMXh4lriOqg4PVOhJ6KQw_drQ1FjcJ";
 
-// Bybit API
+let D={}, openSignals=[], allSignals=[], currentTab="market", loaded=false;
+
+// ── Supabase ─────────────────────────────────────────────
+async function sbGet(path){
+  try{
+    const r=await fetch(`${SUPABASE_URL}/rest/v1/${path}`,{
+      headers:{"apikey":SUPABASE_KEY,"Authorization":`Bearer ${SUPABASE_KEY}`}
+    });
+    return r.ok ? await r.json() : [];
+  }catch{return [];}
+}
+
+async function loadSignals(){
+  allSignals = await sbGet("signals?select=*&order=created_at.desc&limit=100");
+  openSignals = allSignals.filter(s=>s.status==="OPEN");
+}
+
+// ── Bybit API ─────────────────────────────────────────────
 async function bk(sym,iv,lim){
   try{
     const r=await fetch(`https://api.bybit.com/v5/market/kline?category=linear&symbol=${sym}&interval=${iv}&limit=${lim}`);
@@ -196,27 +274,20 @@ async function bt(sym){
   }catch{return null;}
 }
 
-// Indicators
+// ── 指標 ─────────────────────────────────────────────────
 const ma=(a,n)=>a.length<n?null:a.slice(-n).reduce((x,y)=>x+y,0)/n;
 function calcRSI(c,p=14){
   if(c.length<p*3)return null;
   let g=0,l=0;
   for(let i=1;i<=p;i++){const d=c[i]-c[i-1];if(d>0)g+=d;else l-=d;}
   let ag=g/p,al=l/p;
-  for(let i=p+1;i<c.length;i++){
-    const d=c[i]-c[i-1];
-    ag=(ag*(p-1)+(d>0?d:0))/p;
-    al=(al*(p-1)+(d<0?-d:0))/p;
-  }
+  for(let i=p+1;i<c.length;i++){const d=c[i]-c[i-1];ag=(ag*(p-1)+(d>0?d:0))/p;al=(al*(p-1)+(d<0?-d:0))/p;}
   return al===0?100:parseFloat((100-100/(1+ag/al)).toFixed(1));
 }
 function calcKD(h,lo,c,p=9,sk=3,sd=3){
   if(c.length<p+10)return null;
   const rk=[];
-  for(let i=p-1;i<c.length;i++){
-    const hh=Math.max(...h.slice(i-p+1,i+1)),ll=Math.min(...lo.slice(i-p+1,i+1));
-    rk.push(hh===ll?50:((c[i]-ll)/(hh-ll))*100);
-  }
+  for(let i=p-1;i<c.length;i++){const hh=Math.max(...h.slice(i-p+1,i+1)),ll=Math.min(...lo.slice(i-p+1,i+1));rk.push(hh===ll?50:((c[i]-ll)/(hh-ll))*100);}
   const km=2/(sk+1),dm=2/(sd+1);
   const ka=[rk[0]];for(let i=1;i<rk.length;i++)ka.push(rk[i]*km+ka[i-1]*(1-km));
   const da=[ka[0]];for(let i=1;i<ka.length;i++)da.push(ka[i]*dm+da[i-1]*(1-dm));
@@ -225,14 +296,15 @@ function calcKD(h,lo,c,p=9,sk=3,sd=3){
 function buildSig(c){
   if(!c||!c.rsi||!c.kd)return{s:"HOLD"};
   const{rsi:r,kd:k,tr,price:p}=c;
-  const gx=k.pk<=k.pd&&k.k>k.d;
-  const dx=k.pk>=k.pd&&k.k<k.d;
+  const gx=k.pk<=k.pd&&k.k>k.d,dx=k.pk>=k.pd&&k.k<k.d;
   if(gx&&k.k<30&&k.d<30&&r<40&&tr!=="BEAR")
-    return{s:"LONG",sl:+(p*(1-SLP)).toFixed(4),tp:+(p*(1+TPP)).toFixed(4),time:new Date().toLocaleString("zh-TW",{timeZone:"Asia/Taipei"}),
-      reason:`KD金叉（K=${k.k} 穿越 D=${k.d}）\nRSI超賣 ${r}，反彈機率高`,type:"KD金叉反彈"};
+    return{s:"LONG",sl:+(p*(1-SLP)).toFixed(4),tp:+(p*(1+TPP)).toFixed(4),
+      reason:`KD金叉（K=${k.k} 穿越 D=${k.d}）\nRSI超賣 ${r}，反彈機率高`,type:"KD金叉反彈",
+      time:new Date().toLocaleString("zh-TW",{timeZone:"Asia/Taipei"})};
   if(dx&&k.k>70&&k.d>70&&r>60&&tr!=="BULL")
-    return{s:"SHORT",sl:+(p*(1+SLP)).toFixed(4),tp:+(p*(1-TPP)).toFixed(4),time:new Date().toLocaleString("zh-TW",{timeZone:"Asia/Taipei"}),
-      reason:`KD死叉（K=${k.k} 跌破 D=${k.d}）\nRSI超買 ${r}，回調風險高`,type:"KD死叉反壓"};
+    return{s:"SHORT",sl:+(p*(1+SLP)).toFixed(4),tp:+(p*(1-TPP)).toFixed(4),
+      reason:`KD死叉（K=${k.k} 跌破 D=${k.d}）\nRSI超買 ${r}，回調風險高`,type:"KD死叉反壓",
+      time:new Date().toLocaleString("zh-TW",{timeZone:"Asia/Taipei"})};
   if((k.k<35&&r<45)||(k.k>65&&r>55))return{s:"WATCH"};
   return{s:"HOLD"};
 }
@@ -240,60 +312,132 @@ function buildSig(c){
 const fmt=n=>{if(!n&&n!==0)return"—";if(n<0.001)return n.toFixed(6);if(n<1)return n.toFixed(4);if(n<100)return n.toFixed(3);return n.toLocaleString("en-US",{maximumFractionDigits:2})};
 const rsiC=r=>!r?"#c4a898":r<35?"#28a870":r>65?"#e04858":"#d4903a";
 const kdC=k=>!k?"#c4a898":k<30?"#28a870":k>70?"#e04858":"#c4a898";
-const SL2={LONG:"▲ 做多",SHORT:"▼ 做空",WATCH:"◎ 觀望",HOLD:"— 持有"};
+const SL2={LONG:"▲ 做多",SHORT:"▼ 做空",WATCH:"◎ 觀望",HOLD:"— 持有",HOLDING:"📌 持倉中"};
 const TR={BULL:"↑ 日線多頭",BEAR:"↓ 日線空頭",NEUTRAL:"→ 日線中性"};
 
-// Render grid
-function render(){
-  const all=SYMS.map(s=>{const c=D[s];return{s,c,sg:c?buildSig(c):{s:"HOLD"}};});
-  const ls=all.filter(x=>x.sg.s==="LONG");
-  const ss2=all.filter(x=>x.sg.s==="SHORT");
-  const ws=all.filter(x=>x.sg.s==="WATCH");
-  document.getElementById("ca").textContent=`(${all.length})`;
-  document.getElementById("cl").textContent=ls.length?`(${ls.length})`:"";
-  document.getElementById("cs").textContent=ss2.length?`(${ss2.length})`:"";
-  document.getElementById("cw").textContent=ws.length?`(${ws.length})`:"";
-  const bn=document.getElementById("banner");
-  if(ls.length){bn.style.display="block";bn.textContent="✦ 做多信號："+ls.map(x=>x.s.replace("USDT","")).join("・");}
-  else bn.style.display="none";
+// 計算當前浮動損益
+function calcLivePnl(openSig, currentPrice){
+  const entry=parseFloat(openSig.entry_price);
+  if(!currentPrice||!entry)return null;
+  const pct = openSig.direction==="LONG"
+    ? ((currentPrice-entry)/entry)*100
+    : ((entry-currentPrice)/entry)*100;
+  return parseFloat(pct.toFixed(2));
+}
 
-  const show=flt==="ALL"?all:all.filter(x=>x.sg.s===flt);
-  document.getElementById("coin-list").innerHTML=show.map(({s,c,sg})=>{
-    if(!c)return`<div class="ccard"><div class="cc-sym">${s.replace("USDT","")}</div><div style="font-size:11px;color:#c4a898;margin-top:8px">載入中…</div></div>`;
-    const up=c.change24h>=0;
-    return`<div class="ccard s${sg.s}" onclick="openP('${s}')">
-      <div class="cc-sym">${s.replace("USDT","")}</div>
-      <div class="cc-name">${NM[s]||""}</div>
-      <div class="cc-price">$${fmt(c.price)}</div>
-      <div class="cc-chg ${up?"up":"dn"}">${up?"+":""}${c.change24h?.toFixed(2)}%</div>
-      <div class="cc-inds">
-        <div class="cc-ind">
-          <span class="cc-ind-lbl">RSI</span>
-          <span class="cc-ind-val" style="color:${rsiC(c.rsi)}">${c.rsi||"…"}</span>
-        </div>
-        <div class="cc-ind">
-          <span class="cc-ind-lbl">K</span>
-          <span class="cc-ind-val" style="color:${kdC(c.kd?.k)}">${c.kd?.k||"…"}</span>
-        </div>
-        <div class="cc-ind">
-          <span class="cc-ind-lbl">D</span>
-          <span class="cc-ind-val">${c.kd?.d||"…"}</span>
-        </div>
-      </div>
-      <span class="spill ${sg.s}">${SL2[sg.s]}</span>
-    </div>`;
-  }).join("");
+// ── 渲染 Coin Card ────────────────────────────────────────
+function renderCard(sym){
+  const c=D[sym];if(!c)return"";
+  const openSig=openSignals.find(s=>s.symbol===sym&&s.status==="OPEN");
+  const sg=openSig?{s:"HOLDING"}:buildSig(c);
+  const up=c.change24h>=0;
+
+  // 持倉中的浮動損益
+  let pnlHTML="";
+  if(openSig){
+    const pnl=calcLivePnl(openSig,c.price);
+    if(pnl!==null){
+      const pos=openSig.direction==="LONG"?pnl>0:pnl>0;
+      pnlHTML=`<div style="font-size:10px;font-weight:600;margin-top:4px;color:${pnl>=0?"#28a870":"#e04858"}">浮動 ${pnl>=0?"+":""}${pnl}%</div>`;
+    }
+  }
+
+  return`<div class="ccard s${sg.s}" onclick="openP('${sym}')">
+    <div class="cc-sym">${sym.replace("USDT","")}</div>
+    <div class="cc-name">${NM[sym]||""}</div>
+    <div class="cc-price">$${fmt(c.price)}</div>
+    <div class="cc-chg ${up?"up":"dn"}">${up?"+":""}${c.change24h?.toFixed(2)}%</div>
+    <div class="cc-inds">
+      <div class="cc-ind"><span class="cc-ind-lbl">RSI</span><span class="cc-ind-val" style="color:${rsiC(c.rsi)}">${c.rsi||"…"}</span></div>
+      <div class="cc-ind"><span class="cc-ind-lbl">K</span><span class="cc-ind-val" style="color:${kdC(c.kd?.k)}">${c.kd?.k||"…"}</span></div>
+      <div class="cc-ind"><span class="cc-ind-lbl">D</span><span class="cc-ind-val">${c.kd?.d||"…"}</span></div>
+    </div>
+    <span class="spill ${sg.s}">${SL2[sg.s]}</span>
+    ${pnlHTML}
+  </div>`;
+}
+
+// ── 渲染列表 ─────────────────────────────────────────────
+function renderList(containerId, filter){
+  const show = filter==="all" ? SYMS
+    : filter==="long" ? SYMS.filter(s=>{
+        const o=openSignals.find(x=>x.symbol===s);
+        return o?.direction==="LONG"||(!o&&buildSig(D[s]||{}).s==="LONG");
+      })
+    : SYMS.filter(s=>{
+        const o=openSignals.find(x=>x.symbol===s);
+        return o?.direction==="SHORT"||(!o&&buildSig(D[s]||{}).s==="SHORT");
+      });
+
+  const el=document.getElementById(containerId);
+  if(el) el.innerHTML=show.map(renderCard).join("")||
+    `<div class="empty-state">目前沒有符合條件的信號</div>`;
+}
+
+function render(){
+  const longs=SYMS.filter(s=>{const o=openSignals.find(x=>x.symbol===s);return o?.direction==="LONG"||(!o&&buildSig(D[s]||{}).s==="LONG");});
+  const shorts=SYMS.filter(s=>{const o=openSignals.find(x=>x.symbol===s);return o?.direction==="SHORT"||(!o&&buildSig(D[s]||{}).s==="SHORT");});
+  document.getElementById("cl").textContent=longs.length?`(${longs.length})`:"";
+  document.getElementById("cs").textContent=shorts.length?`(${shorts.length})`:"";
+
+  const banner=document.getElementById("banner");
+  if(longs.length||openSignals.length){
+    banner.style.display="block";
+    const parts=[];
+    if(openSignals.length) parts.push(`📌 持倉：${openSignals.map(s=>s.symbol.replace("USDT","")).join("・")}`);
+    if(longs.filter(s=>!openSignals.find(x=>x.symbol===s)).length)
+      parts.push(`✦ 新做多：${longs.filter(s=>!openSignals.find(x=>x.symbol===s)).map(s=>s.replace("USDT","")).join("・")}`);
+    banner.textContent=parts.join("  ");
+  } else banner.style.display="none";
+
+  renderList("coin-list","all");
+  renderList("coin-list-long","long");
+  renderList("coin-list-short","short");
   document.getElementById("upd").textContent=new Date().toLocaleTimeString("zh-TW");
 }
 
-// Detail panel
+// ── 績效頁 ───────────────────────────────────────────────
+function renderPerf(){
+  const closed=allSignals.filter(s=>s.status!=="OPEN");
+  const wins=closed.filter(s=>s.result==="WIN");
+  const losses=closed.filter(s=>s.result==="LOSS");
+  const wr=closed.length?Math.round((wins.length/closed.length)*100):0;
+
+  document.getElementById("p-total").textContent=allSignals.length;
+  document.getElementById("p-wr").textContent=closed.length?`${wr}%`:"—";
+  document.getElementById("p-win").textContent=wins.length;
+  document.getElementById("p-loss").textContent=losses.length;
+  document.getElementById("p-bar").style.width=`${wr}%`;
+
+  const histHTML=allSignals.length===0
+    ? `<div class="empty-state">尚無信號紀錄<br><span style="font-size:11px">等待第一個信號出現</span></div>`
+    : allSignals.map(sig=>{
+        const dir=sig.direction==="LONG"?"▲":"▼";
+        const dt=new Date(sig.created_at).toLocaleString("zh-TW",{timeZone:"Asia/Taipei",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"});
+        const rb=sig.status==="OPEN"?"OPEN":sig.result==="WIN"?"WIN":"LOSS";
+        const rl=sig.status==="OPEN"?"持倉中":sig.result==="WIN"?"+6% ✅":"-3% ❌";
+        return`<div class="sig-row">
+          <div class="sig-row-dir ${sig.direction}">${dir}</div>
+          <div class="sig-row-info">
+            <div class="sig-row-sym">${sig.symbol.replace("USDT","")}/USDT</div>
+            <div class="sig-row-date">${dt} · ${sig.signal_type||""}</div>
+          </div>
+          <div class="sig-row-price">進 $${fmt(sig.entry_price)}<br>損 $${fmt(sig.sl_price)}</div>
+          <div class="sig-row-result"><span class="result-badge ${rb}">${rl}</span></div>
+        </div>`;
+      }).join("");
+  document.getElementById("p-history").innerHTML=histHTML;
+}
+
+// ── Detail Panel ─────────────────────────────────────────
 function openP(sym){
   const c=D[sym];if(!c)return;
-  const sg=buildSig(c);const up=c.change24h>=0;
-
-  // Analysis rows
+  const openSig=openSignals.find(s=>s.symbol===sym&&s.status==="OPEN");
+  const sg=openSig?{s:"HOLDING"}:buildSig(c);
+  const up=c.change24h>=0;
   const gx=c.kd?c.kd.pk<=c.kd.pd&&c.kd.k>c.kd.d:false;
   const dx=c.kd?c.kd.pk>=c.kd.pd&&c.kd.k<c.kd.d:false;
+
   const anaRows=[
     ["RSI (14)",`${c.rsi||"—"}`,c.rsi<35?"超賣區":c.rsi>65?"超買區":"中性區"],
     ["KD · K值",`${c.kd?.k||"—"}`,c.kd?.k<30?"超賣區":c.kd?.k>70?"超買區":"中性"],
@@ -303,7 +447,26 @@ function openP(sym){
   ];
 
   let sigHTML="";
-  if(sg.s==="LONG"||sg.s==="SHORT"){
+  if(openSig){
+    // 持倉中信號
+    const pnl=calcLivePnl(openSig,c.price);
+    const pnlClass=pnl>=0?"pos":"neg";
+    const openDir=openSig.direction==="LONG"?"做多 ▲":"做空 ▼";
+    const openDt=new Date(openSig.created_at).toLocaleString("zh-TW",{timeZone:"Asia/Taipei"});
+    sigHTML=`
+    <div class="sigcard HOLDING">
+      <div class="sc-head"><span class="sc-emoji">📌</span><span class="sc-title HOLDING">持倉中 ｜ ${sym.replace("USDT","")}/USDT ${openDir}</span></div>
+      <div class="sc-prices">
+        <div class="sc-pitem"><div class="sc-plbl">📍 進場價</div><div class="sc-pval e" style="font-size:14px">$${fmt(openSig.entry_price)}</div></div>
+        <div class="sc-pitem"><div class="sc-plbl">🛑 止損</div><div class="sc-pval s">$${fmt(openSig.sl_price)}</div></div>
+        <div class="sc-pitem"><div class="sc-plbl">🎯 止盈</div><div class="sc-pval t">$${fmt(openSig.tp_price)}</div></div>
+      </div>
+      ${pnl!==null?`<div class="pnl-live ${pnlClass}">當前浮動損益：${pnl>=0?"+":""}${pnl}%　現價 $${fmt(c.price)}</div>`:""}
+      <div class="sc-reason" style="margin-top:8px"><strong>進場依據：</strong>${openSig.reason||""}<br>
+        <span style="font-size:10.5px;color:#c4a898">📅 進場時間：${openDt}</span>
+      </div>
+    </div>`;
+  } else if(sg.s==="LONG"||sg.s==="SHORT"){
     const em=sg.s==="LONG"?"🟢":"🔴";
     const ttl=sg.s==="LONG"?"做多 ▲ 信號":"做空 ▼ 信號";
     sigHTML=`
@@ -315,8 +478,7 @@ function openP(sym){
         <div class="sc-pitem"><div class="sc-plbl">🎯 止盈 +6%</div><div class="sc-pval t">$${fmt(sg.tp)}</div></div>
       </div>
       <div class="sc-reason"><strong>進場依據：</strong><br>${sg.reason.replace(/\n/g,"<br>")}</div>
-      <div style="font-size:11px;color:var(--soft);margin-bottom:4px">🕐 信號時間：${sg.time||"—"}</div>
-      <div class="sc-meta">⏰ 策略：${sg.type} ｜ 1小時K線<br>📊 止損 3% / 止盈 6% ｜ 報酬比 1:2</div>
+      <div class="sc-meta">🕐 ${sg.time||""}<br>⏰ 策略：${sg.type} ｜ 1小時K ｜ 報酬比 1:2</div>
     </div>`;
   } else {
     sigHTML=`<div style="background:rgba(0,0,0,.04);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:14px;text-align:center">
@@ -334,7 +496,6 @@ function openP(sym){
     </div>
     <div class="dbody">
       <div class="trbadge ${c.tr||"NEUTRAL"}">${TR[c.tr||"NEUTRAL"]}</div>
-
       <div class="ana-card">
         <div class="ana-title">技術指標分析</div>
         ${anaRows.map(([l,v,note])=>`<div class="ana-row">
@@ -342,7 +503,6 @@ function openP(sym){
           <span class="ana-row-val">${v}${note?` <span style="font-size:10px;font-weight:400;color:var(--muted)">· ${note}</span>`:""}</span>
         </div>`).join("")}
       </div>
-
       ${sigHTML}
       <div class="dwarn">⚠️ 以上僅供參考，不構成投資建議。加密貨幣具高度風險，請謹慎評估。</div>
     </div>`;
@@ -356,19 +516,22 @@ function closeP(){
   document.getElementById("dpanel").style.display="none";
 }
 
-function setF(m,el){
-  flt=m;
+function setTab(tab,el){
+  currentTab=tab;
   document.querySelectorAll(".tab").forEach(t=>t.classList.remove("on"));
   el.classList.add("on");
-  render();
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.getElementById(`page-${tab==="long"?"long":tab==="short"?"short":tab==="perf"?"perf":"market"}`).classList.add("active");
+  if(tab==="perf") renderPerf();
 }
 
-// Load data
+// ── 載入資料 ─────────────────────────────────────────────
 async function load(sym,i){
   const[h1,dy,tk]=await Promise.all([bk(sym,"60",500),bk(sym,"D",50),bt(sym)]);
   if(!h1||!dy||!tk)return;
   const dm13=ma(dy.c,13),dm34=ma(dy.c,34);
-  D[sym]={price:tk.p,change24h:tk.ch,rsi:calcRSI(h1.c),kd:calcKD(h1.h,h1.lo,h1.c),
+  D[sym]={price:tk.p,change24h:tk.ch,
+    rsi:calcRSI(h1.c),kd:calcKD(h1.h,h1.lo,h1.c),
     tr:dm13&&dm34?(dm13>dm34*1.02?"BULL":dm13<dm34*0.98?"BEAR":"NEUTRAL"):"NEUTRAL"};
   document.getElementById("load-n").textContent=`${i+1} / ${SYMS.length}`;
   document.getElementById("pgfill").style.width=`${((i+1)/SYMS.length)*100}%`;
@@ -376,21 +539,32 @@ async function load(sym,i){
 
 async function init(){
   document.getElementById("pgwrap").style.display="block";
+  // 同時載入信號資料庫和幣種資料
+  await loadSignals();
   for(let i=0;i<SYMS.length;i++){
     await load(SYMS[i],i);
     if(i%4===3)await new Promise(r=>setTimeout(r,80));
   }
   document.getElementById("pgwrap").style.display="none";
   document.getElementById("loading").style.display="none";
-  const cl=document.getElementById("coin-list");
-  cl.classList.remove("hidden");
+  document.getElementById("page-market").style.display="block";
+  loaded=true;
   render();
 
+  // 每30秒更新價格
   setInterval(async()=>{
     await Promise.all(SYMS.map(async s=>{const t=await bt(s);if(t&&D[s]){D[s].price=t.p;D[s].change24h=t.ch;}}));
     render();
   },30000);
 
+  // 每5分鐘重新讀取信號資料庫（追蹤止盈止損狀態）
+  setInterval(async()=>{
+    await loadSignals();
+    render();
+    if(currentTab==="perf") renderPerf();
+  },5*60*1000);
+
+  // 每15分鐘重算指標
   setInterval(async()=>{
     for(let i=0;i<SYMS.length;i++){await load(SYMS[i],i);await new Promise(r=>setTimeout(r,180));}
     render();
