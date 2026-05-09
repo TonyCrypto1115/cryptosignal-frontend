@@ -522,19 +522,19 @@ function openP(sym){
     const openDir=openSig.direction==="LONG"?"做多 ▲":"做空 ▼";
     const openDt=new Date(openSig.created_at).toLocaleString("zh-TW",{timeZone:"Asia/Taipei"});
     sigHTML=`
-    <div class="sigcard HOLDING">
-      <div class="sc-head">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#28a870" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M3 12h3M18 12h3M12 3v3M12 18v3"/></svg>
-        <span class="sc-title HOLDING">持倉中 ｜ ${sym.replace("USDT","")}/USDT ${openDir}</span>
+    <div class='sigcard HOLDING'>
+      <div class='sc-head'>
+        <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='#28a870' stroke-width='2' stroke-linecap='round'><circle cx='12' cy='12' r='3'/><path d='M3 12h3M18 12h3M12 3v3M12 18v3'/></svg>
+        <span class='sc-title HOLDING'>持倉中 ｜ ${sym.replace('USDT','')}/USDT ${openDir}</span>
       </div>
-      <div class="sc-prices">
-        <div class="sc-pitem"><div class="sc-plbl">${IC.dot} 進場價</div><div class="sc-pval e" style="font-size:14px">$${fmt(openSig.entry_price)}</div></div>
-        <div class="sc-pitem"><div class="sc-plbl" style="color:#e04858">${IC.x} 止損</div><div class="sc-pval s">$${fmt(openSig.sl_price)}</div></div>
-        <div class="sc-pitem"><div class="sc-plbl" style="color:#28a870">${IC.check} 止盈</div><div class="sc-pval t">$${fmt(openSig.tp_price)}</div></div>
+      <div class='sc-prices'>
+        <div class='sc-pitem'><div class='sc-plbl'>${IC.dot} 進場價</div><div class='sc-pval e' style='font-size:14px'>$${fmt(openSig.entry_price)}</div></div>
+        <div class='sc-pitem'><div class='sc-plbl' style='color:#e04858'>${IC.x} 止損</div><div class='sc-pval s'>$${fmt(openSig.sl_price)}</div></div>
+        <div class='sc-pitem'><div class='sc-plbl' style='color:#28a870'>${IC.check} 止盈</div><div class='sc-pval t'>$${fmt(openSig.tp_price)}</div></div>
       </div>
-      ${pnl!==null?`<div class="pnl-live ${pnl>=0?"pos":"neg"}">浮動損益：${pnl>=0?"+":""}${pnl}%　現價 $${fmt(c.price)}</div>`:""}
-      <div class="sc-reason"><strong>進場依據：</strong>${openSig.reason||""}</div>
-      <div class="sc-meta">${IC.clock} ${openDt}</div>
+      ${pnl!==null?`<div class='pnl-live ${pnl>=0?'pos':'neg'}'>浮動損益：${pnl>=0?'+':''}${pnl}%　現價 $${fmt(c.price)}</div>`:''}
+      <div class='sc-reason'><strong>進場依據：</strong>${openSig.reason||''}</div>
+      <div class='sc-meta'>${IC.clock} ${openDt}</div>
     </div>`;
   } else if(sg.s==="LONG"||sg.s==="SHORT"){
     const isLong=sg.s==="LONG";
