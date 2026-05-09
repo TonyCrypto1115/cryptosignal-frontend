@@ -228,10 +228,10 @@ function buildSig(c){
   const gx=k.pk<=k.pd&&k.k>k.d;
   const dx=k.pk>=k.pd&&k.k<k.d;
   if(gx&&k.k<30&&k.d<30&&r<40&&tr!=="BEAR")
-    return{s:"LONG",sl:+(p*(1-SLP)).toFixed(4),tp:+(p*(1+TPP)).toFixed(4),
+    return{s:"LONG",sl:+(p*(1-SLP)).toFixed(4),tp:+(p*(1+TPP)).toFixed(4),time:new Date().toLocaleString("zh-TW",{timeZone:"Asia/Taipei"}),
       reason:`KD金叉（K=${k.k} 穿越 D=${k.d}）\nRSI超賣 ${r}，反彈機率高`,type:"KD金叉反彈"};
   if(dx&&k.k>70&&k.d>70&&r>60&&tr!=="BULL")
-    return{s:"SHORT",sl:+(p*(1+SLP)).toFixed(4),tp:+(p*(1-TPP)).toFixed(4),
+    return{s:"SHORT",sl:+(p*(1+SLP)).toFixed(4),tp:+(p*(1-TPP)).toFixed(4),time:new Date().toLocaleString("zh-TW",{timeZone:"Asia/Taipei"}),
       reason:`KD死叉（K=${k.k} 跌破 D=${k.d}）\nRSI超買 ${r}，回調風險高`,type:"KD死叉反壓"};
   if((k.k<35&&r<45)||(k.k>65&&r>55))return{s:"WATCH"};
   return{s:"HOLD"};
@@ -315,7 +315,8 @@ function openP(sym){
         <div class="sc-pitem"><div class="sc-plbl">🎯 止盈 +6%</div><div class="sc-pval t">$${fmt(sg.tp)}</div></div>
       </div>
       <div class="sc-reason"><strong>進場依據：</strong><br>${sg.reason.replace(/\n/g,"<br>")}</div>
-      <div class="sc-meta">⏰ 策略：${sg.type} ｜ 1小時K線 ｜ 止損3% 止盈6%</div>
+      <div style="font-size:11px;color:var(--soft);margin-bottom:4px">🕐 信號時間：${sg.time||"—"}</div>
+      <div class="sc-meta">⏰ 策略：${sg.type} ｜ 1小時K線<br>📊 止損 3% / 止盈 6% ｜ 報酬比 1:2</div>
     </div>`;
   } else {
     sigHTML=`<div style="background:rgba(0,0,0,.04);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:14px;text-align:center">
