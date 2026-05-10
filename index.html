@@ -490,12 +490,19 @@ function renderPerf(){
               </select>
             </div>
             <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--soft)">
-              <span>實際盈虧</span>
-              <input type="number" step="0.01" placeholder="填入金額" value="${sig.actual_pnl||""}"
-                onblur="updateSignal(${sig.id},'actual_pnl',this.value)"
-                style="font-size:11px;border:1px solid var(--border);border-radius:6px;padding:2px 8px;background:var(--bg);color:var(--text);width:80px;font-family:var(--mono)"/>
-              <span style="color:var(--muted)">USDT</span>
-            </div>
+  <span>實際盈虧</span>
+  <input
+    type="number"
+    step="0.01"
+    placeholder="填入金額"
+    value="${sig.actual_pnl || ""}"
+    onblur="updateSignal(${sig.id},'actual_pnl',this.value)"
+    style="font-size:11px;border:1px solid var(--border);border-radius:6px;padding:2px 8px;background:var(--bg);color:var(--text);width:80px;font-family:var(--mono)"
+  />
+  <span style="color:var(--muted)">USDT</span>
+</div>
+</div>
+</div>`;
       }).join("");
   document.getElementById("p-history").innerHTML=histHTML;
 }
