@@ -67,12 +67,14 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 .ccard.sLONG::before{background:var(--long);opacity:1}
 .ccard.sSHORT::before{background:var(--short);opacity:1}
 .ccard.sWATCH::before{background:var(--watch);opacity:1}
-.ccard.sHOLDING::before{background:linear-gradient(90deg,var(--long),var(--coral));opacity:1}
+.ccard.sHOLDING_LONG::before{background:var(--long);opacity:1}
+.ccard.sHOLDING_SHORT::before{background:var(--short);opacity:1}
 
 /* signal glow */
 .ccard.sLONG{background:linear-gradient(160deg,rgba(40,168,112,.08) 0%,#fff 60%);box-shadow:0 0 0 1px rgba(40,168,112,.2),0 4px 20px rgba(40,168,112,.12)}
 .ccard.sSHORT{background:linear-gradient(160deg,rgba(224,72,88,.07) 0%,#fff 60%);box-shadow:0 0 0 1px rgba(224,72,88,.18),0 4px 20px rgba(224,72,88,.1)}
-.ccard.sHOLDING{background:linear-gradient(160deg,rgba(40,168,112,.1) 0%,#fff 60%);box-shadow:0 0 0 1px rgba(40,168,112,.25),0 4px 24px rgba(40,168,112,.15)}
+.ccard.sHOLDING_LONG{background:linear-gradient(160deg,rgba(40,168,112,.1) 0%,#fff 60%);box-shadow:0 0 0 1px rgba(40,168,112,.25),0 4px 24px rgba(40,168,112,.15)}
+.ccard.sHOLDING_SHORT{background:linear-gradient(160deg,rgba(224,72,88,.09) 0%,#fff 60%);box-shadow:0 0 0 1px rgba(224,72,88,.22),0 4px 24px rgba(224,72,88,.13)}
 
 .cc-sym{font-size:16px;font-weight:700;letter-spacing:-.3px;margin-bottom:1px}
 .cc-name{font-size:10px;color:var(--muted);margin-bottom:8px}
@@ -217,7 +219,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   <div id="loading">
     <div class="spinner"></div>
     <div id="load-txt">載入幣種資料中…</div>
-    <div id="load-n">0 / 20</div>
+    <div id="load-n">0 / 23</div>
   </div>
   <div class="page active" id="page-market"><div id="coin-list"></div></div>
   <div class="page" id="page-long"><div id="coin-list-long"></div></div>
@@ -266,8 +268,8 @@ const IC={
 };
 
 // ── 常數 ────────────────────────────────────────────────
-const SYMS=["BTCUSDT","ETHUSDT","BNBUSDT","SOLUSDT","XRPUSDT","DOGEUSDT","ADAUSDT","AVAXUSDT","TRXUSDT","DOTUSDT","LINKUSDT","LTCUSDT","UNIUSDT","ATOMUSDT","APTUSDT","INJUSDT","ARBUSDT","OPUSDT","SUIUSDT","NEARUSDT"];
-const NM={BTCUSDT:"Bitcoin",ETHUSDT:"Ethereum",BNBUSDT:"BNB",SOLUSDT:"Solana",XRPUSDT:"XRP",DOGEUSDT:"Dogecoin",ADAUSDT:"Cardano",AVAXUSDT:"Avalanche",TRXUSDT:"TRON",DOTUSDT:"Polkadot",LINKUSDT:"Chainlink",LTCUSDT:"Litecoin",UNIUSDT:"Uniswap",ATOMUSDT:"Cosmos",APTUSDT:"Aptos",INJUSDT:"Injective",ARBUSDT:"Arbitrum",OPUSDT:"Optimism",SUIUSDT:"Sui",NEARUSDT:"NEAR"};
+const SYMS=["BTCUSDT","ETHUSDT","BNBUSDT","SOLUSDT","XRPUSDT","DOGEUSDT","ADAUSDT","AVAXUSDT","TRXUSDT","DOTUSDT","LINKUSDT","LTCUSDT","UNIUSDT","ATOMUSDT","APTUSDT","INJUSDT","ARBUSDT","OPUSDT","SUIUSDT","NEARUSDT","AAVEUSDT","ONDOUSDT","PENDLEUSDT"];
+const NM={BTCUSDT:"Bitcoin",ETHUSDT:"Ethereum",BNBUSDT:"BNB",SOLUSDT:"Solana",XRPUSDT:"XRP",DOGEUSDT:"Dogecoin",ADAUSDT:"Cardano",AVAXUSDT:"Avalanche",TRXUSDT:"TRON",DOTUSDT:"Polkadot",LINKUSDT:"Chainlink",LTCUSDT:"Litecoin",UNIUSDT:"Uniswap",ATOMUSDT:"Cosmos",APTUSDT:"Aptos",INJUSDT:"Injective",ARBUSDT:"Arbitrum",OPUSDT:"Optimism",SUIUSDT:"Sui",NEARUSDT:"NEAR",AAVEUSDT:"Aave",ONDOUSDT:"Ondo Finance",PENDLEUSDT:"Pendle"};
 const SLP=0.03,TPP=0.06;
 const SUPABASE_URL="https://blivdibgijnpoeumfloe.supabase.co";
 const SUPABASE_KEY="sb_publishable_TVMXh4lriOqg4PVOhJ6KQw_drQ1FjcJ";
@@ -366,9 +368,10 @@ function calcLivePnl(openSig,currentPrice){
 function renderCard(sym){
   const c=D[sym];if(!c)return"";
   const openSig=openSignals.find(s=>s.symbol===sym&&s.status==="OPEN");
-  const sg=openSig?{s:"HOLDING"}:buildSig(c);
+  const sg=openSig?{s:"HOLDING",dir:openSig.direction}:buildSig(c);
   const up=c.change24h>=0;
   const rc=rsiColor(c.rsi);
+  const holdingClass=sg.s==="HOLDING"?(sg.dir==="LONG"?"sHOLDING_LONG":"sHOLDING_SHORT"):"";
 
   // signal pill icon
   const pillIcon=sg.s==="LONG"?`<svg class="ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>`
@@ -382,7 +385,7 @@ function renderCard(sym){
     if(pnl!==null)pnlHTML=`<div class="pnl-tag" style="color:${pnl>=0?"#28a870":"#e04858"}">${pnl>=0?"+":""}${pnl}%</div>`;
   }
 
-  return`<div class="ccard s${sg.s}" onclick="openP('${sym}')">
+  return`<div class="ccard ${sg.s==="HOLDING"?holdingClass:"s"+sg.s}" onclick="openP('${sym}')">
     <div class="cc-sym">${sym.replace("USDT","")}</div>
     <div class="cc-name">${NM[sym]||""}</div>
     <div class="cc-price">$${fmt(c.price)}</div>
@@ -398,7 +401,7 @@ function renderCard(sym){
       <span class="kd-badge" style="color:${kdColor(c.kd?.k)}">K ${c.kd?.k||"…"}</span>
       <span class="kd-badge">D ${c.kd?.d||"…"}</span>
     </div>
-    <span class="spill ${sg.s}" style="color:${sg.s==="LONG"?"#28a870":sg.s==="SHORT"?"#e04858":sg.s==="WATCH"?"#d4903a":"#c4a898"}">${pillIcon} ${SL2[sg.s]}</span>
+    <span class="spill ${sg.s==="HOLDING"?(sg.dir==="LONG"?"LONG":"SHORT"):sg.s}" style="color:${(sg.s==="LONG"||(sg.s==="HOLDING"&&sg.dir==="LONG"))?"#28a870":(sg.s==="SHORT"||(sg.s==="HOLDING"&&sg.dir==="SHORT"))?"#e04858":sg.s==="WATCH"?"#d4903a":"#c4a898"}">${pillIcon} ${SL2[sg.s]}</span>
     ${pnlHTML}
   </div>`;
 }
