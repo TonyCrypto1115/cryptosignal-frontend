@@ -516,131 +516,48 @@ function openP(sym){
 ["日線趨勢",c.tr==="BULL"?"多頭 ↑":c.tr==="BEAR"?"空頭 ↓":"中性",""],
   ];
 
-  let sigHTML = "";
-
-if (openSig) {
-  const pnl = calcLivePnl(openSig, c.price);
-  const openDir = openSig.direction === "LONG" ? "做多 ▲" : "做空 ▼";
-  const openDt = new Date(openSig.created_at).toLocaleString("zh-TW", { timeZone: "Asia/Taipei" });
-  
-  // 將嵌套的模板字串提取出來，避免引號打架與解析錯誤
-  const pnlHTML = pnl !== null 
-    ? `<div class="pnl-live ${pnl >= 0 ? 'pos' : 'neg'}">浮動損益：${pnl >= 0 ? '+' : ''}${pnl}%　現價 $${fmt(c.price)}</div>` 
-    : '';
-
-  let sigHTML = "";
-
-if (openSig) {
-  const pnl = calcLivePnl(openSig, c.price);
-  const openDir = openSig.direction === "LONG" ? "做多 ▲" : "做空 ▼";
-  const openDt = new Date(openSig.created_at).toLocaleString("zh-TW", { timeZone: "Asia/Taipei" });
-  
-  // 這裡就是出錯的地方！請注意 ? 後面和 </div> 後面的「反引號 `」
-  const pnlHTML = pnl !== null 
-    ? `<div class="pnl-live ${pnl >= 0 ? 'pos' : 'neg'}">浮動損益：${pnl >= 0 ? '+' : ''}${pnl}%　現價 $${fmt(c.price)}</div>` 
-    : '';
-
-  sigHTML = `
-    <div class="sigcard HOLDING">
-      <div class="sc-head">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#28a870" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M3 12h3M18 12h3M12 3v3M12 18v3"/></svg>
-        <span class="sc-title HOLDING">持倉中 ｜ ${sym.replace('USDT', '')}/USDT ${openDir}</span>
+  let sigHTML="";
+  if(openSig){
+    const pnl=calcLivePnl(openSig,c.price);
+    const openDir=openSig.direction==="LONG"?"做多 ▲":"做空 ▼";
+    const openDt=new Date(openSig.created_at).toLocaleString("zh-TW",{timeZone:"Asia/Taipei"});
+    sigHTML=`
+    <div class='sigcard HOLDING'>
+      <div class='sc-head'>
+        <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='#28a870' stroke-width='2' stroke-linecap='round'><circle cx='12' cy='12' r='3'/><path d='M3 12h3M18 12h3M12 3v3M12 18v3'/></svg>
+        <span class='sc-title HOLDING'>持倉中 ｜ ${sym.replace('USDT','')}/USDT ${openDir}</span>
       </div>
-      <div class="sc-prices">
-        <div class="sc-pitem">
-          <div class="sc-plbl">${IC.dot} 進場價</div>
-          <div class="sc-pval e" style="font-size:14px">$${fmt(openSig.entry_price)}</div>
-        </div>
-        <div class="sc-pitem">
-          <div class="sc-plbl" style="color:#e04858">${IC.x} 止損</div>
-          <div class="sc-pval s">$${fmt(openSig.sl_price)}</div>
-        </div>
-        <div class="sc-pitem">
-          <div class="sc-plbl" style="color:#28a870">${IC.check} 止盈</div>
-          <div class="sc-pval t">$${fmt(openSig.tp_price)}</div>
-        </div>
+      <div class='sc-prices'>
+        <div class='sc-pitem'><div class='sc-plbl'>${IC.dot} 進場價</div><div class='sc-pval e' style='font-size:14px'>$${fmt(openSig.entry_price)}</div></div>
+        <div class='sc-pitem'><div class='sc-plbl' style='color:#e04858'>${IC.x} 止損</div><div class='sc-pval s'>$${fmt(openSig.sl_price)}</div></div>
+        <div class='sc-pitem'><div class='sc-plbl' style='color:#28a870'>${IC.check} 止盈</div><div class='sc-pval t'>$${fmt(openSig.tp_price)}</div></div>
       </div>
-      ${pnlHTML}
-      <div class="sc-reason"><strong>進場依據：</strong>${openSig.reason || ''}</div>
-      <div class="sc-meta">${IC.clock} ${openDt}</div>
-    </div>
-  `;
-} else if (sg.s === "LONG" || sg.s === "SHORT") {
-  const isLong = sg.s === "LONG";
-  const dirIcon = isLong 
-    ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#28a870" stroke-width="2" stroke-linecap="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>`
-    : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e04858" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>`;
-  
-  sigHTML = `
+      ${pnl!==null?`<div class='pnl-live ${pnl>=0?'pos':'neg'}'>浮動損益：${pnl>=0?'+':''}${pnl}%　現價 $${fmt(c.price)}</div>`:''}
+      <div class='sc-reason'><strong>進場依據：</strong>${openSig.reason||''}</div>
+      <div class='sc-meta'>${IC.clock} ${openDt}</div>
+    </div>`;
+  } else if(sg.s==="LONG"||sg.s==="SHORT"){
+    const isLong=sg.s==="LONG";
+    const dirIcon=isLong?`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#28a870" stroke-width="2" stroke-linecap="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>`
+      :`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e04858" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>`;
+    sigHTML=`
     <div class="sigcard ${sg.s}">
-      <div class="sc-head">
-        ${dirIcon}
-        <span class="sc-title ${sg.s}">${isLong ? "做多" : "做空"} ｜ ${sym.replace("USDT", "")}/USDT 永續</span>
-      </div>
+      <div class="sc-head">${dirIcon}<span class="sc-title ${sg.s}">${isLong?"做多":"做空"} ｜ ${sym.replace("USDT","")}/USDT 永續</span></div>
       <div class="sc-prices">
-        <div class="sc-pitem">
-          <div class="sc-plbl">${IC.dot} 進場價</div>
-          <div class="sc-pval e" style="font-size:14px">$${fmt(c.price)}</div>
-        </div>
-        <div class="sc-pitem">
-          <div class="sc-plbl" style="color:#e04858">${IC.x} 止損 -3%</div>
-          <div class="sc-pval s">$${fmt(sg.sl)}</div>
-        </div>
-        <div class="sc-pitem">
-          <div class="sc-plbl" style="color:#28a870">${IC.check} 止盈 +6%</div>
-          <div class="sc-pval t">$${fmt(sg.tp)}</div>
-        </div>
+        <div class="sc-pitem"><div class="sc-plbl">${IC.dot} 進場價</div><div class="sc-pval e" style="font-size:14px">$${fmt(c.price)}</div></div>
+        <div class="sc-pitem"><div class="sc-plbl" style="color:#e04858">${IC.x} 止損 -3%</div><div class="sc-pval s">$${fmt(sg.sl)}</div></div>
+        <div class="sc-pitem"><div class="sc-plbl" style="color:#28a870">${IC.check} 止盈 +6%</div><div class="sc-pval t">$${fmt(sg.tp)}</div></div>
       </div>
-      <div class="sc-reason"><strong>進場依據：</strong><br>${(sg.reason || '').replace(/\n/g, "<br>")}</div>
-      <div class="sc-meta">${IC.clock} ${sg.time || ""} &nbsp;·&nbsp; ${IC.trend} ${sg.type} ｜ 1小時K ｜ 報酬比 1:2</div>
-    </div>
-  `;
-} else {
-  sigHTML = `
-    <div style="background:rgba(0,0,0,.04); border:1px solid var(--border); border-radius:14px; padding:14px; margin-bottom:14px; text-align:center">
-      <div style="font-size:13px; color:var(--muted); margin-bottom:4px">${sg.s === "WATCH" ? "觀望中" : "目前無信號"}</div>
-      <div style="font-size:11px; color:var(--muted)">${sg.s === "WATCH" ? "指標接近關鍵區間，持續觀察中" : "尚未達到進場條件，等待KD金叉/死叉"}</div>
-    </div>
-  `;
-}
-} else if (sg.s === "LONG" || sg.s === "SHORT") {
-  const isLong = sg.s === "LONG";
-  const dirIcon = isLong 
-    ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#28a870" stroke-width="2" stroke-linecap="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>`
-    : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e04858" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>`;
-  
-  sigHTML = `
-    <div class="sigcard ${sg.s}">
-      <div class="sc-head">
-        ${dirIcon}
-        <span class="sc-title ${sg.s}">${isLong ? "做多" : "做空"} ｜ ${sym.replace("USDT", "")}/USDT 永續</span>
-      </div>
-      <div class="sc-prices">
-        <div class="sc-pitem">
-          <div class="sc-plbl">${IC.dot} 進場價</div>
-          <div class="sc-pval e" style="font-size:14px">$${fmt(c.price)}</div>
-        </div>
-        <div class="sc-pitem">
-          <div class="sc-plbl" style="color:#e04858">${IC.x} 止損 -3%</div>
-          <div class="sc-pval s">$${fmt(sg.sl)}</div>
-        </div>
-        <div class="sc-pitem">
-          <div class="sc-plbl" style="color:#28a870">${IC.check} 止盈 +6%</div>
-          <div class="sc-pval t">$${fmt(sg.tp)}</div>
-        </div>
-      </div>
-      <div class="sc-reason"><strong>進場依據：</strong><br>${(sg.reason || '').replace(/\n/g, "<br>")}</div>
-      <div class="sc-meta">${IC.clock} ${sg.time || ""} &nbsp;·&nbsp; ${IC.trend} ${sg.type} ｜ 1小時K ｜ 報酬比 1:2</div>
-    </div>
-  `;
-} else {
-  sigHTML = `
-    <div style="background:rgba(0,0,0,.04); border:1px solid var(--border); border-radius:14px; padding:14px; margin-bottom:14px; text-align:center">
-      <div style="font-size:13px; color:var(--muted); margin-bottom:4px">${sg.s === "WATCH" ? "觀望中" : "目前無信號"}</div>
-      <div style="font-size:11px; color:var(--muted)">${sg.s === "WATCH" ? "指標接近關鍵區間，持續觀察中" : "尚未達到進場條件，等待KD金叉/死叉"}</div>
-    </div>
-  `;
-}
+      <div class="sc-reason"><strong>進場依據：</strong><br>${sg.reason.replace(/\n/g,"<br>")}</div>
+      <div class="sc-meta">${IC.clock} ${sg.time||""} &nbsp;·&nbsp; ${IC.trend} ${sg.type} ｜ 1小時K ｜ 報酬比 1:2</div>
+    </div>`;
+  } else {
+    sigHTML=`<div style="background:rgba(0,0,0,.04);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:14px;text-align:center">
+      <div style="font-size:13px;color:var(--muted);margin-bottom:4px">${sg.s==="WATCH"?"觀望中":"目前無信號"}</div>
+      <div style="font-size:11px;color:var(--muted)">${sg.s==="WATCH"?"指標接近關鍵區間，持續觀察中":"尚未達到進場條件，等待KD金叉/死叉"}</div>
+    </div>`;
+  }
+
   document.getElementById("dpc").innerHTML=`
     <div class="dhead">
       <div style="display:flex;justify-content:space-between;align-items:flex-start">
