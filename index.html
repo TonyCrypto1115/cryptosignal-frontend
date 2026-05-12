@@ -233,6 +233,10 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
         <div class="stat-box"><div class="stat-lbl">獲利筆數</div><div class="stat-val green" id="p-win">—</div></div>
         <div class="stat-box"><div class="stat-lbl">虧損筆數</div><div class="stat-val red" id="p-loss">—</div></div>
       </div>
+      <div class="stat-box" style="margin-bottom:10px;text-align:center">
+        <div class="stat-lbl">累積實際盈虧（已進場）</div>
+        <div class="stat-val" id="p-pnl">—</div>
+      </div>
       <div class="winrate-bar">
         <div class="wr-title">勝率分佈</div>
         <div class="wr-bar-wrap"><div class="wr-bar-win" id="p-bar" style="width:0%"></div><div class="wr-bar-loss"></div></div>
@@ -330,19 +334,23 @@ function calcKD(h,lo,c,p=9,sk=3,sd=3){
 }
 function buildSig(c,sym){
   if(!c||!c.rsi||!c.kd)return{s:"HOLD"};
-  const{rsi:r,kd:k,tr,price:p}=c;
+  const{rsi:r,kd:k,price:p,high500,low500}=c;
   const{sl:SLP,tp:TPP}=getSLTP(sym);
   const gx=k.pk<=k.pd&&k.k>k.d,dx=k.pk>=k.pd&&k.k<k.d;
-  if(gx&&k.k<30&&k.d<30&&r<40&&tr!=="BEAR")
-    return{s:"LONG",sl:+(p*(1-SLP)).toFixed(4),tp:+(p*(1+TPP)).toFixed(4),
-      slPct:SLP*100,tpPct:TPP*100,
-      reason:`KD金叉（K=${k.k} 穿越 D=${k.d}）\nRSI超賣 ${r}，反彈機率高`,type:"KD金叉反彈",
-      time:new Date().toLocaleString("zh-TW",{timeZone:"Asia/Taipei"})};
-  if(dx&&k.k>70&&k.d>70&&r>60&&tr!=="BULL")
-    return{s:"SHORT",sl:+(p*(1+SLP)).toFixed(4),tp:+(p*(1-TPP)).toFixed(4),
-      slPct:SLP*100,tpPct:TPP*100,
-      reason:`KD死叉（K=${k.k} 跌破 D=${k.d}）\nRSI超買 ${r}，回調風險高`,type:"KD死叉反壓",
-      time:new Date().toLocaleString("zh-TW",{timeZone:"Asia/Taipei"})};
+  if(gx&&k.k<30&&k.d<30&&r<30){
+    const sl=+(p*(1-SLP)).toFixed(4),tp=+(p*(1+TPP)).toFixed(4);
+    if(high500&&low500&&sl>low500&&tp<high500)
+      return{s:"LONG",sl,tp,slPct:SLP*100,tpPct:TPP*100,
+        reason:`KD金叉（K=${k.k} 穿越 D=${k.d}）\nRSI超賣 ${r}，反彈機率高`,type:"KD金叉反彈",
+        time:new Date().toLocaleString("zh-TW",{timeZone:"Asia/Taipei"})};
+  }
+  if(dx&&k.k>70&&k.d>70&&r>70){
+    const sl=+(p*(1+SLP)).toFixed(4),tp=+(p*(1-TPP)).toFixed(4);
+    if(high500&&low500&&sl<high500&&tp>low500)
+      return{s:"SHORT",sl,tp,slPct:SLP*100,tpPct:TPP*100,
+        reason:`KD死叉（K=${k.k} 跌破 D=${k.d}）\nRSI超買 ${r}，回調風險高`,type:"KD死叉反壓",
+        time:new Date().toLocaleString("zh-TW",{timeZone:"Asia/Taipei"})};
+  }
   if((k.k<35&&r<45)||(k.k>65&&r>55))return{s:"WATCH"};
   return{s:"HOLD"};
 }
@@ -502,6 +510,15 @@ function renderPerf(){
   document.getElementById("p-win").textContent=wins.length;
   document.getElementById("p-loss").textContent=losses.length;
   document.getElementById("p-bar").style.width=closed.length?`${wr}%`:"0%";
+  // 累積實際盈虧：只算有進場(entered===true)且有填actual_pnl的單
+  const enteredSigs=allSignals.filter(s=>s.entered===true&&s.actual_pnl!=null);
+  const totalPnl=enteredSigs.reduce((sum,s)=>sum+parseFloat(s.actual_pnl),0);
+  const pnlEl=document.getElementById("p-pnl");
+  if(enteredSigs.length===0){pnlEl.textContent="—";pnlEl.className="stat-val";}
+  else{
+    pnlEl.textContent=`${totalPnl>=0?"+":""}${totalPnl.toFixed(2)} USDT`;
+    pnlEl.className=`stat-val ${totalPnl>=0?"green":"red"}`;
+  }
   // 只顯示「有進場」或「未填」的單，未進場(entered===false)隱藏
   const visible=allSignals.filter(s=>s.entered!==false);
   const histHTML=visible.length===0
@@ -663,11 +680,15 @@ function setTab(tab,el){
 
 // ── Load ─────────────────────────────────────────────────
 async function load(sym,i){
-  const[h1,dy,tk]=await Promise.all([bk(sym,"60",500),bk(sym,"D",50),bt(sym)]);
-  if(!h1||!dy||!tk)return;
-  const dm13=ma(dy.c,13),dm34=ma(dy.c,34);
-  D[sym]={price:tk.p,change24h:tk.ch,rsi:calcRSI(h1.c),kd:calcKD(h1.h,h1.lo,h1.c),
-    tr:dm13&&dm34?(dm13>dm34*1.02?"BULL":dm13<dm34*0.98?"BEAR":"NEUTRAL"):"NEUTRAL"};
+  const[h1,tk]=await Promise.all([bk(sym,"60",500),bt(sym)]);
+  if(!h1||!tk)return;
+  D[sym]={
+    price:tk.p,change24h:tk.ch,
+    rsi:calcRSI(h1.c),
+    kd:calcKD(h1.h,h1.lo,h1.c),
+    high500:Math.max(...h1.h),
+    low500:Math.min(...h1.lo),
+  };
   document.getElementById("load-n").textContent=`${i+1} / ${SYMS.length}`;
   document.getElementById("pgfill").style.width=`${((i+1)/SYMS.length)*100}%`;
 }
