@@ -441,6 +441,35 @@ function render(){
 }
 
 // ── Performance ───────────────────────────────────────────
+async function manualClose(id){
+  const sig=allSignals.find(s=>s.id===id);
+  if(!sig)return;
+  const exitPrice=prompt(`手動平倉｜${sig.symbol.replace("USDT","")}/USDT\n請輸入出場價格：`);
+  if(!exitPrice||isNaN(parseFloat(exitPrice)))return;
+  const entry=parseFloat(sig.entry_price);
+  const exit=parseFloat(exitPrice);
+  const pnlPct=sig.direction==="LONG"
+    ?+((exit-entry)/entry*100).toFixed(2)
+    :+((entry-exit)/entry*100).toFixed(2);
+  const result=pnlPct>=0?"WIN":"LOSS";
+  const ok=window.confirm(`出場價：$${exit}\n損益：${pnlPct>=0?"+":""}${pnlPct}%\n結果：${result==="WIN"?"獲利 ✅":"虧損 ❌"}\n\n確認平倉？`);
+  if(!ok)return;
+  try{
+    await fetch(`${SUPABASE_URL}/rest/v1/signals?id=eq.${id}`,{
+      method:"PATCH",
+      headers:{
+        "apikey":SUPABASE_KEY,
+        "Authorization":`Bearer ${SUPABASE_KEY}`,
+        "Content-Type":"application/json",
+        "Prefer":"return=minimal"
+      },
+      body:JSON.stringify({status:result,result,exit_price:exit,pnl_pct:pnlPct,actual_pnl:pnlPct,closed_at:new Date().toISOString()})
+    });
+    await loadSignals();render();renderPerf();
+    alert(`已記錄平倉！${pnlPct>=0?"+":""}${pnlPct}%`);
+  }catch(e){alert("平倉記錄失敗，請重試");}
+}
+
 async function updateSignal(id, field, value){
   try{
     const body={};
@@ -482,13 +511,16 @@ function renderPerf(){
           :`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#e04858" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>`;
         const dt=new Date(sig.created_at).toLocaleString("zh-TW",{timeZone:"Asia/Taipei",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"});
         const rb=sig.status==="OPEN"?"OPEN":sig.result==="WIN"?"WIN":"LOSS";
-        const rl=sig.status==="OPEN"?"持倉中":sig.result==="WIN"?"+6%":"-3%";
+        const rl=sig.status==="OPEN"?"持倉中":sig.result==="WIN"?`+${sig.pnl_pct||""}%`:`${sig.pnl_pct||""}%`;
+        const manualBtn=sig.status==="OPEN"
+          ?`<button onclick="manualClose(${sig.id})" style="font-size:11px;padding:3px 10px;border-radius:8px;border:1px solid var(--coral);background:rgba(224,96,80,.08);color:var(--coral);cursor:pointer;font-weight:600">手動平倉</button>`
+          :"";
         return`<div class="sig-row" style="flex-wrap:wrap;gap:8px">
           <div style="display:flex;align-items:center;gap:10px;width:100%">
             <div class="sig-row-dir ${sig.direction}">${dir}</div>
             <div class="sig-row-info"><div class="sig-row-sym">${sig.symbol.replace("USDT","")}/USDT</div><div class="sig-row-date">${dt} · ${sig.signal_type||""}</div></div>
             <div class="sig-row-price">進 $${fmt(sig.entry_price)}<br>損 $${fmt(sig.sl_price)}</div>
-            <div><span class="result-badge ${rb}">${rl}</span></div>
+            <div style="display:flex;align-items:center;gap:6px"><span class="result-badge ${rb}">${rl}</span>${manualBtn}</div>
           </div>
           <div style="display:flex;gap:8px;width:100%;padding-left:38px;flex-wrap:wrap">
             <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--soft)">
