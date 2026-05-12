@@ -270,7 +270,9 @@ const IC={
 // ── 常數 ────────────────────────────────────────────────
 const SYMS=["BTCUSDT","ETHUSDT","BNBUSDT","SOLUSDT","XRPUSDT","DOGEUSDT","ADAUSDT","AVAXUSDT","TRXUSDT","DOTUSDT","LINKUSDT","LTCUSDT","UNIUSDT","ATOMUSDT","APTUSDT","INJUSDT","ARBUSDT","OPUSDT","SUIUSDT","NEARUSDT","AAVEUSDT","ONDOUSDT","PENDLEUSDT"];
 const NM={BTCUSDT:"Bitcoin",ETHUSDT:"Ethereum",BNBUSDT:"BNB",SOLUSDT:"Solana",XRPUSDT:"XRP",DOGEUSDT:"Dogecoin",ADAUSDT:"Cardano",AVAXUSDT:"Avalanche",TRXUSDT:"TRON",DOTUSDT:"Polkadot",LINKUSDT:"Chainlink",LTCUSDT:"Litecoin",UNIUSDT:"Uniswap",ATOMUSDT:"Cosmos",APTUSDT:"Aptos",INJUSDT:"Injective",ARBUSDT:"Arbitrum",OPUSDT:"Optimism",SUIUSDT:"Sui",NEARUSDT:"NEAR",AAVEUSDT:"Aave",ONDOUSDT:"Ondo Finance",PENDLEUSDT:"Pendle"};
-const SLP=0.03,TPP=0.06;
+const SLP=0.015,TPP=0.03; // 預設大幣
+const BIG_COINS=["BTCUSDT","ETHUSDT","BNBUSDT","SOLUSDT","XRPUSDT","DOGEUSDT","ADAUSDT","AVAXUSDT","TRXUSDT","DOTUSDT"];
+const getSLTP=(sym)=>BIG_COINS.includes(sym)?{sl:0.015,tp:0.03}:{sl:0.025,tp:0.05};
 const SUPABASE_URL="https://blivdibgijnpoeumfloe.supabase.co";
 const SUPABASE_KEY="sb_publishable_TVMXh4lriOqg4PVOhJ6KQw_drQ1FjcJ";
 
@@ -326,16 +328,19 @@ function calcKD(h,lo,c,p=9,sk=3,sd=3){
   const da=[ka[0]];for(let i=1;i<ka.length;i++)da.push(ka[i]*dm+da[i-1]*(1-dm));
   return{k:+ka[ka.length-1].toFixed(1),d:+da[da.length-1].toFixed(1),pk:+ka[ka.length-2].toFixed(1),pd:+da[da.length-2].toFixed(1)};
 }
-function buildSig(c){
+function buildSig(c,sym){
   if(!c||!c.rsi||!c.kd)return{s:"HOLD"};
   const{rsi:r,kd:k,tr,price:p}=c;
+  const{sl:SLP,tp:TPP}=getSLTP(sym);
   const gx=k.pk<=k.pd&&k.k>k.d,dx=k.pk>=k.pd&&k.k<k.d;
   if(gx&&k.k<30&&k.d<30&&r<40&&tr!=="BEAR")
     return{s:"LONG",sl:+(p*(1-SLP)).toFixed(4),tp:+(p*(1+TPP)).toFixed(4),
+      slPct:SLP*100,tpPct:TPP*100,
       reason:`KD金叉（K=${k.k} 穿越 D=${k.d}）\nRSI超賣 ${r}，反彈機率高`,type:"KD金叉反彈",
       time:new Date().toLocaleString("zh-TW",{timeZone:"Asia/Taipei"})};
   if(dx&&k.k>70&&k.d>70&&r>60&&tr!=="BULL")
     return{s:"SHORT",sl:+(p*(1+SLP)).toFixed(4),tp:+(p*(1-TPP)).toFixed(4),
+      slPct:SLP*100,tpPct:TPP*100,
       reason:`KD死叉（K=${k.k} 跌破 D=${k.d}）\nRSI超買 ${r}，回調風險高`,type:"KD死叉反壓",
       time:new Date().toLocaleString("zh-TW",{timeZone:"Asia/Taipei"})};
   if((k.k<35&&r<45)||(k.k>65&&r>55))return{s:"WATCH"};
@@ -368,7 +373,7 @@ function calcLivePnl(openSig,currentPrice){
 function renderCard(sym){
   const c=D[sym];if(!c)return"";
   const openSig=openSignals.find(s=>s.symbol===sym&&s.status==="OPEN");
-  const sg=openSig?{s:"HOLDING",dir:openSig.direction}:buildSig(c);
+  const sg=openSig?{s:"HOLDING",dir:openSig.direction}:buildSig(c,sym);
   const up=c.change24h>=0;
   const rc=rsiColor(c.rsi);
   const holdingClass=sg.s==="HOLDING"?(sg.dir==="LONG"?"sHOLDING_LONG":"sHOLDING_SHORT"):"";
@@ -409,15 +414,15 @@ function renderCard(sym){
 // ── Render list ───────────────────────────────────────────
 function renderList(containerId,filter){
   const show=filter==="all"?SYMS
-    :filter==="long"?SYMS.filter(s=>{const o=openSignals.find(x=>x.symbol===s);return o?.direction==="LONG"||(!o&&buildSig(D[s]||{}).s==="LONG");})
-    :SYMS.filter(s=>{const o=openSignals.find(x=>x.symbol===s);return o?.direction==="SHORT"||(!o&&buildSig(D[s]||{}).s==="SHORT");});
+    :filter==="long"?SYMS.filter(s=>{const o=openSignals.find(x=>x.symbol===s);return o?.direction==="LONG"||(!o&&buildSig(D[s]||{},s).s==="LONG");})
+    :SYMS.filter(s=>{const o=openSignals.find(x=>x.symbol===s);return o?.direction==="SHORT"||(!o&&buildSig(D[s]||{},s).s==="SHORT");});
   const el=document.getElementById(containerId);
   if(el)el.innerHTML=show.map(renderCard).join("")||`<div class="empty-state">目前沒有符合條件的信號</div>`;
 }
 
 function render(){
-  const longs=SYMS.filter(s=>{const o=openSignals.find(x=>x.symbol===s);return o?.direction==="LONG"||(!o&&buildSig(D[s]||{}).s==="LONG");});
-  const shorts=SYMS.filter(s=>{const o=openSignals.find(x=>x.symbol===s);return o?.direction==="SHORT"||(!o&&buildSig(D[s]||{}).s==="SHORT");});
+  const longs=SYMS.filter(s=>{const o=openSignals.find(x=>x.symbol===s);return o?.direction==="LONG"||(!o&&buildSig(D[s]||{},s).s==="LONG");});
+  const shorts=SYMS.filter(s=>{const o=openSignals.find(x=>x.symbol===s);return o?.direction==="SHORT"||(!o&&buildSig(D[s]||{},s).s==="SHORT");});
   document.getElementById("cl").textContent=longs.length?`(${longs.length})`:"";
   document.getElementById("cs").textContent=shorts.length?`(${shorts.length})`:"";
   const bn=document.getElementById("banner");
@@ -468,9 +473,11 @@ function renderPerf(){
   document.getElementById("p-win").textContent=wins.length;
   document.getElementById("p-loss").textContent=losses.length;
   document.getElementById("p-bar").style.width=closed.length?`${wr}%`:"0%";
-  const histHTML=allSignals.length===0
+  // 只顯示「有進場」或「未填」的單，未進場(entered===false)隱藏
+  const visible=allSignals.filter(s=>s.entered!==false);
+  const histHTML=visible.length===0
     ?`<div class="empty-state">尚無信號紀錄<br><span style="font-size:11px">等待第一個信號出現</span></div>`
-    :allSignals.map(sig=>{
+    :visible.map(sig=>{
         const dir=sig.direction==="LONG"?`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#28a870" stroke-width="2.5" stroke-linecap="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>`
           :`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#e04858" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>`;
         const dt=new Date(sig.created_at).toLocaleString("zh-TW",{timeZone:"Asia/Taipei",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"});
@@ -514,7 +521,7 @@ function renderPerf(){
 function openP(sym){
   const c=D[sym];if(!c)return;
   const openSig=openSignals.find(s=>s.symbol===sym&&s.status==="OPEN");
-  const sg=openSig?{s:"HOLDING"}:buildSig(c);
+  const sg=openSig?{s:"HOLDING"}:buildSig(c,sym);
   const up=c.change24h>=0;
   const gx=c.kd?c.kd.pk<=c.kd.pd&&c.kd.k>c.kd.d:false;
   const dx=c.kd?c.kd.pk>=c.kd.pd&&c.kd.k<c.kd.d:false;
@@ -555,8 +562,8 @@ function openP(sym){
       <div class="sc-head">${dirIcon}<span class="sc-title ${sg.s}">${isLong?"做多":"做空"} ｜ ${sym.replace("USDT","")}/USDT 永續</span></div>
       <div class="sc-prices">
         <div class="sc-pitem"><div class="sc-plbl">${IC.dot} 進場價</div><div class="sc-pval e" style="font-size:14px">$${fmt(c.price)}</div></div>
-        <div class="sc-pitem"><div class="sc-plbl" style="color:#e04858">${IC.x} 止損 -3%</div><div class="sc-pval s">$${fmt(sg.sl)}</div></div>
-        <div class="sc-pitem"><div class="sc-plbl" style="color:#28a870">${IC.check} 止盈 +6%</div><div class="sc-pval t">$${fmt(sg.tp)}</div></div>
+        <div class="sc-pitem"><div class="sc-plbl" style="color:#e04858">${IC.x} 止損 -${sg.slPct}%</div><div class="sc-pval s">$${fmt(sg.sl)}</div></div>
+        <div class="sc-pitem"><div class="sc-plbl" style="color:#28a870">${IC.check} 止盈 +${sg.tpPct}%</div><div class="sc-pval t">$${fmt(sg.tp)}</div></div>
       </div>
       <div class="sc-reason"><strong>進場依據：</strong><br>${sg.reason.replace(/\n/g,"<br>")}</div>
       <div class="sc-meta">${IC.clock} ${sg.time||""} &nbsp;·&nbsp; ${IC.trend} ${sg.type} ｜ 1小時K ｜ 報酬比 1:2</div>
