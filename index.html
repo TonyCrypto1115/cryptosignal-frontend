@@ -276,7 +276,7 @@ const SYMS=["BTCUSDT","ETHUSDT","BNBUSDT","SOLUSDT","XRPUSDT","DOGEUSDT","ADAUSD
 const NM={BTCUSDT:"Bitcoin",ETHUSDT:"Ethereum",BNBUSDT:"BNB",SOLUSDT:"Solana",XRPUSDT:"XRP",DOGEUSDT:"Dogecoin",ADAUSDT:"Cardano",AVAXUSDT:"Avalanche",TRXUSDT:"TRON",DOTUSDT:"Polkadot",LINKUSDT:"Chainlink",LTCUSDT:"Litecoin",UNIUSDT:"Uniswap",ATOMUSDT:"Cosmos",APTUSDT:"Aptos",INJUSDT:"Injective",ARBUSDT:"Arbitrum",OPUSDT:"Optimism",SUIUSDT:"Sui",NEARUSDT:"NEAR",AAVEUSDT:"Aave",ONDOUSDT:"Ondo Finance",PENDLEUSDT:"Pendle"};
 const SLP=0.015,TPP=0.03; // 預設大幣
 const BIG_COINS=["BTCUSDT","ETHUSDT","BNBUSDT","SOLUSDT","XRPUSDT","DOGEUSDT","ADAUSDT","AVAXUSDT","TRXUSDT","DOTUSDT"];
-const getSLTP=(sym)=>BIG_COINS.includes(sym)?{sl:0.015,tp:0.03}:{sl:0.025,tp:0.05};
+const getSLTP=(sym)=>BIG_COINS.includes(sym)?{sl:0.02,tp:0.04}:{sl:0.03,tp:0.06};
 const SUPABASE_URL="https://blivdibgijnpoeumfloe.supabase.co";
 const SUPABASE_KEY="sb_publishable_TVMXh4lriOqg4PVOhJ6KQw_drQ1FjcJ";
 
@@ -334,17 +334,19 @@ function calcKD(h,lo,c,p=9,sk=3,sd=3){
 }
 function buildSig(c,sym){
   if(!c||!c.rsi||!c.kd)return{s:"HOLD"};
-  const{rsi:r,kd:k,price:p,high500,low500}=c;
+  const{rsi:r,kd:k,price:p,high500,low500,ma20}=c;
   const{sl:SLP,tp:TPP}=getSLTP(sym);
   const gx=k.pk<=k.pd&&k.k>k.d,dx=k.pk>=k.pd&&k.k<k.d;
-  if(gx&&k.k<30&&k.d<30&&r<30){
+  const aboveMA20=ma20&&p>ma20;
+  const belowMA20=ma20&&p<ma20;
+  if(gx&&k.k<30&&k.d<30&&r<30&&aboveMA20){
     const sl=+(p*(1-SLP)).toFixed(4),tp=+(p*(1+TPP)).toFixed(4);
     if(high500&&low500&&sl>low500&&tp<high500)
       return{s:"LONG",sl,tp,slPct:SLP*100,tpPct:TPP*100,
         reason:`KD金叉（K=${k.k} 穿越 D=${k.d}）\nRSI超賣 ${r}，反彈機率高`,type:"KD金叉反彈",
         time:new Date().toLocaleString("zh-TW",{timeZone:"Asia/Taipei"})};
   }
-  if(dx&&k.k>70&&k.d>70&&r>70){
+  if(dx&&k.k>70&&k.d>70&&r>70&&belowMA20){
     const sl=+(p*(1+SLP)).toFixed(4),tp=+(p*(1-TPP)).toFixed(4);
     if(high500&&low500&&sl<high500&&tp>low500)
       return{s:"SHORT",sl,tp,slPct:SLP*100,tpPct:TPP*100,
@@ -688,6 +690,7 @@ async function load(sym,i){
     kd:calcKD(h1.h,h1.lo,h1.c),
     high500:Math.max(...h1.h),
     low500:Math.min(...h1.lo),
+    ma20:ma(h1.c,20),
   };
   document.getElementById("load-n").textContent=`${i+1} / ${SYMS.length}`;
   document.getElementById("pgfill").style.width=`${((i+1)/SYMS.length)*100}%`;
