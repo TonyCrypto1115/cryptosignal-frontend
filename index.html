@@ -334,19 +334,17 @@ function calcKD(h,lo,c,p=9,sk=3,sd=3){
 }
 function buildSig(c,sym){
   if(!c||!c.rsi||!c.kd)return{s:"HOLD"};
-  const{rsi:r,kd:k,price:p,high500,low500,ma20}=c;
+  const{rsi:r,kd:k,price:p,high500,low500}=c;
   const{sl:SLP,tp:TPP}=getSLTP(sym);
   const gx=k.pk<=k.pd&&k.k>k.d,dx=k.pk>=k.pd&&k.k<k.d;
-  const aboveMA20=ma20&&p>ma20;
-  const belowMA20=ma20&&p<ma20;
-  if(gx&&k.k<30&&k.d<30&&r<30&&aboveMA20){
+  if(gx&&k.k<30&&k.d<30&&r<30){
     const sl=+(p*(1-SLP)).toFixed(4),tp=+(p*(1+TPP)).toFixed(4);
     if(high500&&low500&&sl>low500&&tp<high500)
       return{s:"LONG",sl,tp,slPct:SLP*100,tpPct:TPP*100,
         reason:`KD金叉（K=${k.k} 穿越 D=${k.d}）\nRSI超賣 ${r}，反彈機率高`,type:"KD金叉反彈",
         time:new Date().toLocaleString("zh-TW",{timeZone:"Asia/Taipei"})};
   }
-  if(dx&&k.k>70&&k.d>70&&r>70&&belowMA20){
+  if(dx&&k.k>70&&k.d>70&&r>70){
     const sl=+(p*(1+SLP)).toFixed(4),tp=+(p*(1-TPP)).toFixed(4);
     if(high500&&low500&&sl<high500&&tp>low500)
       return{s:"SHORT",sl,tp,slPct:SLP*100,tpPct:TPP*100,
