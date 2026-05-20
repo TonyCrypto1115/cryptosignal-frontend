@@ -201,7 +201,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 
 <div id="hdr">
   <div class="hdr-row">
-    <div id="logo">CryptoSignal ✦<br><span style="font-size:11px;font-weight:500;letter-spacing:.2px;background:linear-gradient(135deg,#e06050,#c8506a);-webkit-background-clip:text;-webkit-text-fill-color:transparent">by Tony Chang · @blackheartcat1115</span></div>
+    <div id="logo">CryptoSignal ✦<br><span style="font-size:11px;font-weight:500;letter-spacing:.2px;background:linear-gradient(135deg,#e06050,#c8506a);-webkit-background-clip:text;-webkit-text-fill-color:transparent">by Tony Chang · @CryptoSignal_Tony</span></div>
     <div id="upd">載入中…</div>
   </div>
   <div class="tabs">
@@ -227,6 +227,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   <div class="page" id="page-perf">
     <div style="margin-bottom:12px">
       <div style="font-size:13px;font-weight:600;color:var(--soft);margin-bottom:10px">交易績效統計</div>
+      <div id="p-version-wrap"></div>
       <div class="stat-grid">
         <div class="stat-box"><div class="stat-lbl">總信號數</div><div class="stat-val" id="p-total">—</div></div>
         <div class="stat-box"><div class="stat-lbl">勝率</div><div class="stat-val gold" id="p-wr">—</div></div>
@@ -280,7 +281,19 @@ const getSLTP=(sym)=>BIG_COINS.includes(sym)?{sl:0.02,tp:0.04}:{sl:0.03,tp:0.06}
 const SUPABASE_URL="https://blivdibgijnpoeumfloe.supabase.co";
 const SUPABASE_KEY="sb_publishable_TVMXh4lriOqg4PVOhJ6KQw_drQ1FjcJ";
 
-let D={},openSignals=[],allSignals=[],currentTab="market",loaded=false;
+const VERSIONS = {
+  "全部": { desc: null },
+  "CryptoSignalTony舊策略": {
+    date: "~ 2026-05-18",
+    desc: "初始策略：RSI<40/60 + KD金叉死叉，止盈6% 止損3%，無高低點過濾"
+  },
+  "CryptoSignalTony_V1": {
+    date: "2026-05-19 起",
+    desc: "RSI收緊至<30/>70，大幣止損2%止盈4%，小幣止損3%止盈6%，加入500根K棒高低點過濾"
+  },
+};
+
+let currentVersion="全部";
 
 // ── Supabase ─────────────────────────────────────────────
 async function sbGet(path){
@@ -501,17 +514,21 @@ async function updateSignal(id, field, value){
   }catch(e){console.error("更新失敗",e);}
 }  
 function renderPerf(){
-  const closed=allSignals.filter(s=>s.status!=="OPEN");
+  const filtered=currentVersion==="全部"?allSignals
+    :currentVersion==="CryptoSignalTony舊策略"
+      ?allSignals.filter(s=>!s.version||s.version==="CryptoSignalTony舊策略")
+      :allSignals.filter(s=>s.version===currentVersion);
+
+  const closed=filtered.filter(s=>s.status!=="OPEN");
   const wins=closed.filter(s=>s.result==="WIN");
   const losses=closed.filter(s=>s.result==="LOSS");
   const wr=closed.length?Math.round((wins.length/closed.length)*100):0;
-  document.getElementById("p-total").textContent=allSignals.length;
+  document.getElementById("p-total").textContent=filtered.length;
   document.getElementById("p-wr").textContent=closed.length?`${wr}%`:"—";
   document.getElementById("p-win").textContent=wins.length;
   document.getElementById("p-loss").textContent=losses.length;
   document.getElementById("p-bar").style.width=closed.length?`${wr}%`:"0%";
-  // 累積實際盈虧：只算有進場(entered===true)且有填actual_pnl的單
-  const enteredSigs=allSignals.filter(s=>s.entered===true&&s.actual_pnl!=null);
+  const enteredSigs=filtered.filter(s=>s.entered===true&&s.actual_pnl!=null);
   const totalPnl=enteredSigs.reduce((sum,s)=>sum+parseFloat(s.actual_pnl),0);
   const pnlEl=document.getElementById("p-pnl");
   if(enteredSigs.length===0){pnlEl.textContent="—";pnlEl.className="stat-val";}
@@ -519,8 +536,28 @@ function renderPerf(){
     pnlEl.textContent=`${totalPnl>=0?"+":""}${totalPnl.toFixed(2)} USDT`;
     pnlEl.className=`stat-val ${totalPnl>=0?"green":"red"}`;
   }
-  // 只顯示「有進場」或「未填」的單，未進場(entered===false)隱藏
-  const visible=allSignals.filter(s=>s.entered!==false);
+
+  // 版本下拉選單 + 說明
+  const versionOptions=Object.keys(VERSIONS).map(v=>
+    `<option value="${v}" ${v===currentVersion?"selected":""}>${v}</option>`
+  ).join("");
+  const vInfo=VERSIONS[currentVersion];
+  const versionDesc=vInfo&&vInfo.desc?`
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:14px">
+      <div style="font-size:10px;color:var(--muted);font-weight:600;letter-spacing:.3px;text-transform:uppercase;margin-bottom:6px">策略說明 ${vInfo.date?`· ${vInfo.date}`:""}</div>
+      <div style="font-size:12px;color:var(--soft);line-height:1.6">${vInfo.desc}</div>
+    </div>`:"";
+  document.getElementById("p-version-wrap").innerHTML=`
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+      <span style="font-size:12px;color:var(--muted);font-weight:600">策略版本</span>
+      <select onchange="currentVersion=this.value;renderPerf()"
+        style="font-size:12px;border:1px solid var(--border);border-radius:8px;padding:4px 10px;background:var(--bg);color:var(--text);cursor:pointer;font-weight:600">
+        ${versionOptions}
+      </select>
+    </div>
+    ${versionDesc}`;
+
+  const visible=filtered.filter(s=>s.entered!==false);
   const histHTML=visible.length===0
     ?`<div class="empty-state">尚無信號紀錄<br><span style="font-size:11px">等待第一個信號出現</span></div>`
     :visible.map(sig=>{
