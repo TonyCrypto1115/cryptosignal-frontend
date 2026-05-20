@@ -294,6 +294,7 @@ const VERSIONS = {
 };
 
 let currentVersion="CryptoSignalTony_V1";
+let D={},openSignals=[],allSignals=[],currentTab="market",loaded=false;
 
 // ── Supabase ─────────────────────────────────────────────
 async function sbGet(path){
