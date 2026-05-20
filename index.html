@@ -293,7 +293,7 @@ const VERSIONS = {
   },
 };
 
-let currentVersion="全部";
+let currentVersion="CryptoSignalTony_V1";
 
 // ── Supabase ─────────────────────────────────────────────
 async function sbGet(path){
@@ -725,7 +725,6 @@ async function load(sym,i){
     kd:calcKD(h1.h,h1.lo,h1.c),
     high500:Math.max(...h1.h),
     low500:Math.min(...h1.lo),
-    ma20:ma(h1.c,20),
   };
   document.getElementById("load-n").textContent=`${i+1} / ${SYMS.length}`;
   document.getElementById("pgfill").style.width=`${((i+1)/SYMS.length)*100}%`;
@@ -734,9 +733,19 @@ async function load(sym,i){
 async function init(){
   document.getElementById("pgwrap").style.display="block";
   await loadSignals();
+  // 第一輪加載
   for(let i=0;i<SYMS.length;i++){
     await load(SYMS[i],i);
-    if(i%4===3)await new Promise(r=>setTimeout(r,80));
+    if(i%4===3)await new Promise(r=>setTimeout(r,100));
+  }
+  // 重試加載失敗的幣
+  const failed=SYMS.filter(s=>!D[s]);
+  if(failed.length>0){
+    await new Promise(r=>setTimeout(r,1000));
+    for(let i=0;i<failed.length;i++){
+      await load(failed[i],SYMS.indexOf(failed[i]));
+      await new Promise(r=>setTimeout(r,200));
+    }
   }
   document.getElementById("pgwrap").style.display="none";
   document.getElementById("loading").style.display="none";
