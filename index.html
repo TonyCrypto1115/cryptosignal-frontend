@@ -223,9 +223,25 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   <div class="page" id="page-long"><div id="coin-list-long"></div></div>
   <div class="page" id="page-short"><div id="coin-list-short"></div></div>
   <div class="page" id="page-perf">
-    <!-- 合約信號績效 -->
-    <div style="margin-bottom:12px">
-      <div style="font-size:13px;font-weight:600;color:var(--soft);margin-bottom:10px">合約信號績效</div>
+    <!-- 版本選擇器 -->
+    <div style="margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <span style="font-size:12px;font-weight:600;color:var(--muted)">策略版本</span>
+        <select onchange="currentVersion=this.value;renderPerf()"
+          id="version-select"
+          style="font-size:12px;border:1px solid var(--border);border-radius:8px;padding:4px 10px;background:var(--bg);color:var(--text);cursor:pointer;font-weight:600">
+          <option value="CryptoSignalTony_V1">CryptoSignalTony_V1</option>
+          <option value="CryptoSignalTony舊策略">CryptoSignalTony舊策略</option>
+          <option value="網格策略">網格策略</option>
+          <option value="全部">全部</option>
+        </select>
+      </div>
+      <div id="version-desc"></div>
+    </div>
+
+    <!-- 合約信號績效（非網格時顯示） -->
+    <div id="perf-signal-section">
+      <div style="font-size:13px;font-weight:600;color:var(--soft);margin-bottom:10px" id="perf-section-title">合約信號績效</div>
       <div class="stat-grid">
         <div class="stat-box"><div class="stat-lbl">總信號數</div><div class="stat-val" id="p-total">—</div></div>
         <div class="stat-box"><div class="stat-lbl">勝率</div><div class="stat-val gold" id="p-wr">—</div></div>
@@ -241,10 +257,14 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
         <div class="wr-bar-wrap"><div class="wr-bar-win" id="p-bar" style="width:0%"></div><div class="wr-bar-loss"></div></div>
         <div class="wr-legend"><span style="color:var(--long)">止盈</span><span style="color:var(--short)">止損</span></div>
       </div>
+      <div class="sig-history" style="margin-bottom:14px">
+        <div class="sig-history-title">歷史信號紀錄</div>
+        <div id="p-history"></div>
+      </div>
     </div>
 
-    <!-- 網格策略績效 -->
-    <div style="margin-bottom:12px">
+    <!-- 網格績效（選網格策略時顯示） -->
+    <div id="perf-grid-section" style="display:none">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
         <div style="font-size:13px;font-weight:600;color:var(--soft)">網格策略績效</div>
         <button onclick="showGridForm()" style="font-size:12px;padding:4px 14px;border-radius:20px;border:1.5px solid var(--coral);background:rgba(224,96,80,.08);color:var(--coral);cursor:pointer;font-weight:600">+ 新增網格</button>
@@ -259,63 +279,40 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
         <div class="stat-lbl">網格累積盈虧</div>
         <div class="stat-val" id="g-pnl">—</div>
       </div>
+      <!-- 新增網格表單 -->
+      <div id="grid-form" style="display:none;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:16px">
+        <div style="font-size:13px;font-weight:600;color:var(--soft);margin-bottom:14px">新增網格記錄</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+          <div><div style="font-size:11px;color:var(--muted);margin-bottom:4px">幣種（如 NEARUSDT）</div>
+            <input id="gf-symbol" placeholder="NEARUSDT" style="width:100%;font-size:13px;border:1px solid var(--border);border-radius:8px;padding:7px 10px;background:var(--bg);color:var(--text)"/></div>
+          <div><div style="font-size:11px;color:var(--muted);margin-bottom:4px">進場參考價格</div>
+            <input id="gf-entry" type="number" placeholder="2.388" style="width:100%;font-size:13px;border:1px solid var(--border);border-radius:8px;padding:7px 10px;background:var(--bg);color:var(--text)"/></div>
+          <div><div style="font-size:11px;color:var(--muted);margin-bottom:4px">網格下限價格</div>
+            <input id="gf-lower" type="number" placeholder="1.50" style="width:100%;font-size:13px;border:1px solid var(--border);border-radius:8px;padding:7px 10px;background:var(--bg);color:var(--text)"/></div>
+          <div><div style="font-size:11px;color:var(--muted);margin-bottom:4px">網格上限價格</div>
+            <input id="gf-upper" type="number" placeholder="4.00" style="width:100%;font-size:13px;border:1px solid var(--border);border-radius:8px;padding:7px 10px;background:var(--bg);color:var(--text)"/></div>
+          <div><div style="font-size:11px;color:var(--muted);margin-bottom:4px">網格數量</div>
+            <input id="gf-count" type="number" placeholder="20" style="width:100%;font-size:13px;border:1px solid var(--border);border-radius:8px;padding:7px 10px;background:var(--bg);color:var(--text)"/></div>
+          <div><div style="font-size:11px;color:var(--muted);margin-bottom:4px">投入金額 (USDT)</div>
+            <input id="gf-invest" type="number" placeholder="600" style="width:100%;font-size:13px;border:1px solid var(--border);border-radius:8px;padding:7px 10px;background:var(--bg);color:var(--text)"/></div>
+          <div><div style="font-size:11px;color:var(--muted);margin-bottom:4px">開始日期</div>
+            <input id="gf-start" type="date" style="width:100%;font-size:13px;border:1px solid var(--border);border-radius:8px;padding:7px 10px;background:var(--bg);color:var(--text)"/></div>
+          <div><div style="font-size:11px;color:var(--muted);margin-bottom:4px">結束日期（選填）</div>
+            <input id="gf-end" type="date" style="width:100%;font-size:13px;border:1px solid var(--border);border-radius:8px;padding:7px 10px;background:var(--bg);color:var(--text)"/></div>
+        </div>
+        <div style="margin-bottom:10px"><div style="font-size:11px;color:var(--muted);margin-bottom:4px">備註（選填）</div>
+          <input id="gf-notes" placeholder="如：日線底部三次測試支撐" style="width:100%;font-size:13px;border:1px solid var(--border);border-radius:8px;padding:7px 10px;background:var(--bg);color:var(--text)"/></div>
+        <div style="display:flex;gap:8px">
+          <button onclick="submitGrid()" style="flex:1;padding:9px;border-radius:10px;border:none;background:var(--coral);color:#fff;font-size:13px;font-weight:600;cursor:pointer">確認新增</button>
+          <button onclick="hideGridForm()" style="padding:9px 16px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:13px;cursor:pointer">取消</button>
+        </div>
+      </div>
       <div class="sig-history">
         <div class="sig-history-title">網格記錄</div>
         <div id="g-history"></div>
       </div>
     </div>
 
-    <!-- 新增網格表單（預設隱藏） -->
-    <div id="grid-form" style="display:none;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:16px">
-      <div style="font-size:13px;font-weight:600;color:var(--soft);margin-bottom:14px">新增網格記錄</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
-        <div>
-          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">幣種（如 NEARUSDT）</div>
-          <input id="gf-symbol" placeholder="NEARUSDT" style="width:100%;font-size:13px;border:1px solid var(--border);border-radius:8px;padding:7px 10px;background:var(--bg);color:var(--text)"/>
-        </div>
-        <div>
-          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">進場參考價格</div>
-          <input id="gf-entry" type="number" placeholder="2.388" style="width:100%;font-size:13px;border:1px solid var(--border);border-radius:8px;padding:7px 10px;background:var(--bg);color:var(--text)"/>
-        </div>
-        <div>
-          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">網格下限價格</div>
-          <input id="gf-lower" type="number" placeholder="1.50" style="width:100%;font-size:13px;border:1px solid var(--border);border-radius:8px;padding:7px 10px;background:var(--bg);color:var(--text)"/>
-        </div>
-        <div>
-          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">網格上限價格</div>
-          <input id="gf-upper" type="number" placeholder="4.00" style="width:100%;font-size:13px;border:1px solid var(--border);border-radius:8px;padding:7px 10px;background:var(--bg);color:var(--text)"/>
-        </div>
-        <div>
-          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">網格數量</div>
-          <input id="gf-count" type="number" placeholder="20" style="width:100%;font-size:13px;border:1px solid var(--border);border-radius:8px;padding:7px 10px;background:var(--bg);color:var(--text)"/>
-        </div>
-        <div>
-          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">投入金額 (USDT)</div>
-          <input id="gf-invest" type="number" placeholder="600" style="width:100%;font-size:13px;border:1px solid var(--border);border-radius:8px;padding:7px 10px;background:var(--bg);color:var(--text)"/>
-        </div>
-        <div>
-          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">開始日期</div>
-          <input id="gf-start" type="date" style="width:100%;font-size:13px;border:1px solid var(--border);border-radius:8px;padding:7px 10px;background:var(--bg);color:var(--text)"/>
-        </div>
-        <div>
-          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">結束日期（選填）</div>
-          <input id="gf-end" type="date" style="width:100%;font-size:13px;border:1px solid var(--border);border-radius:8px;padding:7px 10px;background:var(--bg);color:var(--text)"/>
-        </div>
-      </div>
-      <div style="margin-bottom:10px">
-        <div style="font-size:11px;color:var(--muted);margin-bottom:4px">備註（選填）</div>
-        <input id="gf-notes" placeholder="如：日線底部三次測試支撐" style="width:100%;font-size:13px;border:1px solid var(--border);border-radius:8px;padding:7px 10px;background:var(--bg);color:var(--text)"/>
-      </div>
-      <div style="display:flex;gap:8px">
-        <button onclick="submitGrid()" style="flex:1;padding:9px;border-radius:10px;border:none;background:var(--coral);color:#fff;font-size:13px;font-weight:600;cursor:pointer">確認新增</button>
-        <button onclick="hideGridForm()" style="padding:9px 16px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:13px;cursor:pointer">取消</button>
-      </div>
-    </div>
-
-    <div class="sig-history">
-      <div class="sig-history-title">歷史信號紀錄</div>
-      <div id="p-history"></div>
-    </div>
     <div style="font-size:10px;color:var(--muted);text-align:center;margin-top:14px;padding-bottom:4px">⚠️ 以上僅供參考，不構成投資建議。加密貨幣具高度風險，請謹慎評估。</div>
   </div>
 </div>
@@ -349,7 +346,23 @@ const getSLTP=(sym)=>BIG_COINS.includes(sym)?{sl:0.02,tp:0.04}:{sl:0.03,tp:0.06}
 const SUPABASE_URL="https://blivdibgijnpoeumfloe.supabase.co";
 const SUPABASE_KEY="sb_publishable_TVMXh4lriOqg4PVOhJ6KQw_drQ1FjcJ";
 
-let D={},openSignals=[],allSignals=[],gridData=[],currentTab="market",loaded=false;
+const VERSIONS={
+  "CryptoSignalTony_V1":{
+    date:"2026-05-19 起",
+    desc:"RSI收緊至<30/>70，大幣止損2%止盈4%，小幣止損3%止盈6%，加入500根K棒高低點過濾"
+  },
+  "CryptoSignalTony舊策略":{
+    date:"~ 2026-05-18",
+    desc:"初始策略：RSI<40/60 + KD金叉死叉，止盈6% 止損3%，無高低點過濾"
+  },
+  "網格策略":{
+    date:"2026-05-24 起",
+    desc:"手動輸入網格記錄，自行判斷幣種形態，統計網格策略勝率和累積盈虧"
+  },
+  "全部":{date:"",desc:""}
+};
+
+let D={},openSignals=[],allSignals=[],gridData=[],currentTab="market",loaded=false,currentVersion="CryptoSignalTony_V1";
 
 // ── Supabase ─────────────────────────────────────────────
 async function sbGet(path){
@@ -536,26 +549,51 @@ async function updateSignal(id, field, value){
   }catch(e){console.error("更新失敗",e);}
 }  
 function renderPerf(){
-  const closed=allSignals.filter(s=>s.status!=="OPEN");
+  // 版本說明
+  const vInfo=VERSIONS[currentVersion];
+  const descEl=document.getElementById("version-desc");
+  if(vInfo&&vInfo.desc){
+    descEl.innerHTML=`<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:14px">
+      <div style="font-size:10px;color:var(--muted);font-weight:600;letter-spacing:.3px;text-transform:uppercase;margin-bottom:5px">策略說明 ${vInfo.date?"· "+vInfo.date:""}</div>
+      <div style="font-size:12px;color:var(--soft);line-height:1.6">${vInfo.desc}</div>
+    </div>`;
+  } else { descEl.innerHTML=""; }
+
+  // 切換顯示區塊
+  const isGrid=currentVersion==="網格策略";
+  document.getElementById("perf-signal-section").style.display=isGrid?"none":"block";
+  document.getElementById("perf-grid-section").style.display=isGrid?"block":"none";
+
+  if(isGrid){ renderGridPerf(); return; }
+
+  // 合約信號篩選
+  const filtered=currentVersion==="全部"?allSignals
+    :currentVersion==="CryptoSignalTony舊策略"
+      ?allSignals.filter(s=>!s.version||s.version==="CryptoSignalTony舊策略")
+      :allSignals.filter(s=>s.version===currentVersion);
+
+  const closed=filtered.filter(s=>s.status!=="OPEN");
   const wins=closed.filter(s=>s.result==="WIN");
   const losses=closed.filter(s=>s.result==="LOSS");
   const wr=closed.length?Math.round((wins.length/closed.length)*100):0;
-  document.getElementById("p-total").textContent=allSignals.length;
+  document.getElementById("p-total").textContent=filtered.length;
   document.getElementById("p-wr").textContent=closed.length?`${wr}%`:"—";
   document.getElementById("p-win").textContent=wins.length;
   document.getElementById("p-loss").textContent=losses.length;
   document.getElementById("p-bar").style.width=closed.length?`${wr}%`:"0%";
-  // 累積盈虧
-  const entered=allSignals.filter(s=>s.entered===true&&s.actual_pnl!=null);
+
+  const entered=filtered.filter(s=>s.entered===true&&s.actual_pnl!=null);
   const totalPnl=entered.reduce((sum,s)=>sum+parseFloat(s.actual_pnl),0);
   const pnlEl=document.getElementById("p-pnl");
   if(entered.length===0){pnlEl.textContent="—";pnlEl.className="stat-val";}
   else{pnlEl.textContent=`${totalPnl>=0?"+":""}${totalPnl.toFixed(2)} USDT`;pnlEl.className=`stat-val ${totalPnl>=0?"green":"red"}`;}
 
-  const histHTML=allSignals.length===0
+  const visible=filtered.filter(s=>s.entered!==false);
+  const histHTML=visible.length===0
     ?`<div class="empty-state">尚無信號紀錄<br><span style="font-size:11px">等待第一個信號出現</span></div>`
-    :allSignals.map(sig=>{
-        const dir=sig.direction==="LONG"?`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#28a870" stroke-width="2.5" stroke-linecap="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>`
+    :visible.map(sig=>{
+        const dir=sig.direction==="LONG"
+          ?`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#28a870" stroke-width="2.5" stroke-linecap="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>`
           :`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#e04858" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>`;
         const dt=new Date(sig.created_at).toLocaleString("zh-TW",{timeZone:"Asia/Taipei",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"});
         const rb=sig.status==="OPEN"?"OPEN":sig.result==="WIN"?"WIN":"LOSS";
@@ -589,7 +627,6 @@ function renderPerf(){
         </div>`;
       }).join("");
   document.getElementById("p-history").innerHTML=histHTML;
-  renderGridPerf();
 }
 
 // ── 網格相關函數 ──────────────────────────────────────────
