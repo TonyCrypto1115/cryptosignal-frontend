@@ -10,7 +10,7 @@
   --bg:#fdf7f2;--card:#ffffff;--border:rgba(200,168,148,0.18);
   --text:#221a16;--soft:#8a6e62;--muted:#c4a898;
   --coral:#e06050;--rose:#c8506a;
-  --long:#e04858;--short:#28a870;--watch:#d4903a;
+  --long:#28a870;--short:#e04858;--watch:#d4903a;
   --ds:'Dancing Script',cursive;
   --mono:'DM Mono',monospace;
 }
@@ -425,7 +425,7 @@ function buildSig(c){
 const fmt=n=>{if(!n&&n!==0)return"—";if(n<0.001)return n.toFixed(6);if(n<1)return n.toFixed(4);if(n<100)return n.toFixed(3);return n.toLocaleString("en-US",{maximumFractionDigits:2})};
 
 // RSI color & bar
-function rsiColor(r){return !r?"#c4a898":r<35?"#e04858":r>65?"#28a870":"#d4903a"}
+function rsiColor(r){return!r?"#c4a898":r<35?"#28a870":r>65?"#e04858":"#d4903a"}
 function rsiBar(val,height=4){
   if(!val)return`<div style="height:${height}px;background:rgba(0,0,0,.06);border-radius:10px"></div>`;
   const col=rsiColor(val);
@@ -433,7 +433,7 @@ function rsiBar(val,height=4){
   return`<div class="rsi-bar-track" style="height:${height}px"><div class="rsi-bar-fill" style="width:${w}%;background:${col}"></div></div>`;
 }
 
-const kdColor=k=>!k?"#c4a898":k<30?"#e04858":k>70?"#d4903a":"#c4a898";
+const kdColor=k=>!k?"#c4a898":k<30?"#28a870":k>70?"#d4903a":"#c4a898";
 const SL2={LONG:"做多",SHORT:"做空",WATCH:"觀望",HOLD:"持有",HOLDING:"持倉中"};
 const TR={BULL:"↑ 日線多頭",BEAR:"↓ 日線空頭",NEUTRAL:"→ 日線中性"};
 
