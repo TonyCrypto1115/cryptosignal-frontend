@@ -406,18 +406,25 @@ function calcKD(h,lo,c,p=9,sk=3,sd=3){
   const da=[ka[0]];for(let i=1;i<ka.length;i++)da.push(ka[i]*dm+da[i-1]*(1-dm));
   return{k:+ka[ka.length-1].toFixed(1),d:+da[da.length-1].toFixed(1),pk:+ka[ka.length-2].toFixed(1),pd:+da[da.length-2].toFixed(1)};
 }
-function buildSig(c){
+function buildSig(c,sym){
   if(!c||!c.rsi||!c.kd)return{s:"HOLD"};
-  const{rsi:r,kd:k,tr,price:p}=c;
+  const{rsi:r,kd:k,price:p,high500,low500}=c;
+  const{sl:SLP,tp:TPP}=getSLTP(sym||"BTCUSDT");
   const gx=k.pk<=k.pd&&k.k>k.d,dx=k.pk>=k.pd&&k.k<k.d;
-  if(gx&&k.k<30&&k.d<30&&r<40&&tr!=="BEAR")
-    return{s:"LONG",sl:+(p*(1-SLP)).toFixed(4),tp:+(p*(1+TPP)).toFixed(4),
-      reason:`KD金叉（K=${k.k} 穿越 D=${k.d}）\nRSI超賣 ${r}，反彈機率高`,type:"KD金叉反彈",
-      time:new Date().toLocaleString("zh-TW",{timeZone:"Asia/Taipei"})};
-  if(dx&&k.k>70&&k.d>70&&r>60&&tr!=="BULL")
-    return{s:"SHORT",sl:+(p*(1+SLP)).toFixed(4),tp:+(p*(1-TPP)).toFixed(4),
-      reason:`KD死叉（K=${k.k} 跌破 D=${k.d}）\nRSI超買 ${r}，回調風險高`,type:"KD死叉反壓",
-      time:new Date().toLocaleString("zh-TW",{timeZone:"Asia/Taipei"})};
+  if(gx&&k.k<30&&k.d<30&&r<30){
+    const sl=+(p*(1-SLP)).toFixed(4),tp=+(p*(1+TPP)).toFixed(4);
+    if(!high500||!low500||( sl>low500&&tp<high500))
+      return{s:"LONG",sl,tp,slPct:SLP*100,tpPct:TPP*100,
+        reason:`KD金叉（K=${k.k} 穿越 D=${k.d}）\nRSI超賣 ${r}，反彈機率高`,type:"KD金叉反彈",
+        time:new Date().toLocaleString("zh-TW",{timeZone:"Asia/Taipei"})};
+  }
+  if(dx&&k.k>70&&k.d>70&&r>70){
+    const sl=+(p*(1+SLP)).toFixed(4),tp=+(p*(1-TPP)).toFixed(4);
+    if(!high500||!low500||(sl<high500&&tp>low500))
+      return{s:"SHORT",sl,tp,slPct:SLP*100,tpPct:TPP*100,
+        reason:`KD死叉（K=${k.k} 跌破 D=${k.d}）\nRSI超買 ${r}，回調風險高`,type:"KD死叉反壓",
+        time:new Date().toLocaleString("zh-TW",{timeZone:"Asia/Taipei"})};
+  }
   if((k.k<35&&r<45)||(k.k>65&&r>55))return{s:"WATCH"};
   return{s:"HOLD"};
 }
@@ -448,7 +455,7 @@ function calcLivePnl(openSig,currentPrice){
 function renderCard(sym){
   const c=D[sym];if(!c)return"";
   const openSig=openSignals.find(s=>s.symbol===sym&&s.status==="OPEN");
-  const sg=openSig?{s:"HOLDING",dir:openSig.direction}:buildSig(c);
+  const sg=openSig?{s:"HOLDING",dir:openSig.direction}:buildSig(c,sym);
   const up=c.change24h>=0;
   const rc=rsiColor(c.rsi);
 
@@ -501,15 +508,15 @@ function renderCard(sym){
 // ── Render list ───────────────────────────────────────────
 function renderList(containerId,filter){
   const show=filter==="all"?SYMS
-    :filter==="long"?SYMS.filter(s=>{const o=openSignals.find(x=>x.symbol===s);return o?.direction==="LONG"||(!o&&buildSig(D[s]||{}).s==="LONG");})
-    :SYMS.filter(s=>{const o=openSignals.find(x=>x.symbol===s);return o?.direction==="SHORT"||(!o&&buildSig(D[s]||{}).s==="SHORT");});
+    :filter==="long"?SYMS.filter(s=>{const o=openSignals.find(x=>x.symbol===s);return o?.direction==="LONG"||(!o&&buildSig(D[s]||{},s).s==="LONG");})
+    :SYMS.filter(s=>{const o=openSignals.find(x=>x.symbol===s);return o?.direction==="SHORT"||(!o&&buildSig(D[s]||{},s).s==="SHORT");});
   const el=document.getElementById(containerId);
   if(el)el.innerHTML=show.map(renderCard).join("")||`<div class="empty-state">目前沒有符合條件的信號</div>`;
 }
 
 function render(){
-  const longs=SYMS.filter(s=>{const o=openSignals.find(x=>x.symbol===s);return o?.direction==="LONG"||(!o&&buildSig(D[s]||{}).s==="LONG");});
-  const shorts=SYMS.filter(s=>{const o=openSignals.find(x=>x.symbol===s);return o?.direction==="SHORT"||(!o&&buildSig(D[s]||{}).s==="SHORT");});
+  const longs=SYMS.filter(s=>{const o=openSignals.find(x=>x.symbol===s);return o?.direction==="LONG"||(!o&&buildSig(D[s]||{},s).s==="LONG");});
+  const shorts=SYMS.filter(s=>{const o=openSignals.find(x=>x.symbol===s);return o?.direction==="SHORT"||(!o&&buildSig(D[s]||{},s).s==="SHORT");});
   document.getElementById("cl").textContent=longs.length?`(${longs.length})`:"";
   document.getElementById("cs").textContent=shorts.length?`(${shorts.length})`:"";
   const bn=document.getElementById("banner");
