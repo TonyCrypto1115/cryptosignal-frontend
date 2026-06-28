@@ -366,7 +366,7 @@ async function sbGet(path){
   }catch{return[];}
 }
 async function loadSignals(){
-  allSignals=await sbGet("signals?select=*&order=created_at.desc&limit=100");
+  allSignals=await sbGet("signals?select=*&order=created_at.desc&limit=500");
   openSignals=allSignals.filter(s=>s.status==="OPEN");
 }
 
