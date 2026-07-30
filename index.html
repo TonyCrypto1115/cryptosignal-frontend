@@ -67,14 +67,12 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 .ccard.sLONG::before{background:var(--long);opacity:1}
 .ccard.sSHORT::before{background:var(--short);opacity:1}
 .ccard.sWATCH::before{background:var(--watch);opacity:1}
-.ccard.sHOLDING_LONG::before{background:var(--long);opacity:1}
-.ccard.sHOLDING_SHORT::before{background:var(--short);opacity:1}
+.ccard.sHOLDING::before{background:linear-gradient(90deg,var(--long),var(--coral));opacity:1}
 
 /* signal glow */
 .ccard.sLONG{background:linear-gradient(160deg,rgba(40,168,112,.08) 0%,#fff 60%);box-shadow:0 0 0 1px rgba(40,168,112,.2),0 4px 20px rgba(40,168,112,.12)}
 .ccard.sSHORT{background:linear-gradient(160deg,rgba(224,72,88,.07) 0%,#fff 60%);box-shadow:0 0 0 1px rgba(224,72,88,.18),0 4px 20px rgba(224,72,88,.1)}
-.ccard.sHOLDING_LONG{background:linear-gradient(160deg,rgba(40,168,112,.1) 0%,#fff 60%);box-shadow:0 0 0 1px rgba(40,168,112,.25),0 4px 24px rgba(40,168,112,.15)}
-.ccard.sHOLDING_SHORT{background:linear-gradient(160deg,rgba(224,72,88,.09) 0%,#fff 60%);box-shadow:0 0 0 1px rgba(224,72,88,.22),0 4px 24px rgba(224,72,88,.13)}
+.ccard.sHOLDING{background:linear-gradient(160deg,rgba(40,168,112,.1) 0%,#fff 60%);box-shadow:0 0 0 1px rgba(40,168,112,.25),0 4px 24px rgba(40,168,112,.15)}
 
 .cc-sym{font-size:16px;font-weight:700;letter-spacing:-.3px;margin-bottom:1px}
 .cc-name{font-size:10px;color:var(--muted);margin-bottom:8px}
@@ -225,83 +223,24 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   <div class="page" id="page-long"><div id="coin-list-long"></div></div>
   <div class="page" id="page-short"><div id="coin-list-short"></div></div>
   <div class="page" id="page-perf">
-    <!-- 版本選擇器 -->
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-      <span style="font-size:12px;font-weight:600;color:var(--muted)">策略版本</span>
-      <select onchange="currentVersion=this.value;renderPerf()" id="version-select"
-        style="font-size:12px;border:1px solid var(--border);border-radius:8px;padding:4px 10px;background:var(--bg);color:var(--text);cursor:pointer;font-weight:600">
-        <option value="CryptoSignalTony_V1">CryptoSignalTony_V1</option>
-        <option value="布林帶策略">布林帶策略</option>
-        <option value="網格策略">網格策略</option>
-        <option value="CryptoSignalTony舊策略">CryptoSignalTony舊策略</option>
-        <option value="全部">全部</option>
-      </select>
-    </div>
-    <div id="version-desc"></div>
-
-    <!-- 合約信號區塊 -->
-    <div id="perf-signal-section">
-      <div style="margin-bottom:12px">
-        <div class="stat-grid">
-          <div class="stat-box"><div class="stat-lbl">總信號數</div><div class="stat-val" id="p-total">—</div></div>
-          <div class="stat-box"><div class="stat-lbl">勝率</div><div class="stat-val gold" id="p-wr">—</div></div>
-          <div class="stat-box"><div class="stat-lbl">獲利筆數</div><div class="stat-val green" id="p-win">—</div></div>
-          <div class="stat-box"><div class="stat-lbl">虧損筆數</div><div class="stat-val red" id="p-loss">—</div></div>
-        </div>
-        <div class="stat-box" style="margin-top:10px;text-align:center">
-          <div class="stat-lbl">累積實際盈虧（已進場）</div>
-          <div class="stat-val" id="p-pnl">—</div>
-        </div>
-        <div class="winrate-bar" style="margin-top:10px">
-          <div class="wr-title">勝率分佈</div>
-          <div class="wr-bar-wrap"><div class="wr-bar-win" id="p-bar" style="width:0%"></div><div class="wr-bar-loss"></div></div>
-          <div class="wr-legend"><span style="color:var(--long)">止盈</span><span style="color:var(--short)">止損</span></div>
-        </div>
+    <div style="margin-bottom:12px">
+      <div style="font-size:13px;font-weight:600;color:var(--soft);margin-bottom:10px">交易績效統計</div>
+      <div class="stat-grid">
+        <div class="stat-box"><div class="stat-lbl">總信號數</div><div class="stat-val" id="p-total">—</div></div>
+        <div class="stat-box"><div class="stat-lbl">勝率</div><div class="stat-val gold" id="p-wr">—</div></div>
+        <div class="stat-box"><div class="stat-lbl">獲利筆數</div><div class="stat-val green" id="p-win">—</div></div>
+        <div class="stat-box"><div class="stat-lbl">虧損筆數</div><div class="stat-val red" id="p-loss">—</div></div>
       </div>
-      <div class="sig-history">
-        <div class="sig-history-title">歷史信號紀錄</div>
-        <div id="p-history"></div>
+      <div class="winrate-bar">
+        <div class="wr-title">勝率分佈</div>
+        <div class="wr-bar-wrap"><div class="wr-bar-win" id="p-bar" style="width:0%"></div><div class="wr-bar-loss"></div></div>
+        <div class="wr-legend"><span style="color:var(--long)">止盈</span><span style="color:var(--short)">止損</span></div>
       </div>
     </div>
-
-    <!-- 網格區塊 -->
-    <div id="perf-grid-section" style="display:none">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-        <div style="font-size:13px;font-weight:600;color:var(--soft)">網格策略績效</div>
-        <button onclick="showGridForm()" style="font-size:12px;padding:4px 14px;border-radius:20px;border:1.5px solid var(--coral);background:rgba(224,96,80,.08);color:var(--coral);cursor:pointer;font-weight:600">+ 新增網格</button>
-      </div>
-      <div class="stat-grid" style="margin-bottom:10px">
-        <div class="stat-box"><div class="stat-lbl">網格總數</div><div class="stat-val" id="g-total">—</div></div>
-        <div class="stat-box"><div class="stat-lbl">勝率</div><div class="stat-val gold" id="g-wr">—</div></div>
-        <div class="stat-box"><div class="stat-lbl">獲利筆數</div><div class="stat-val green" id="g-win">—</div></div>
-        <div class="stat-box"><div class="stat-lbl">虧損筆數</div><div class="stat-val red" id="g-loss">—</div></div>
-      </div>
-      <div class="stat-box" style="margin-bottom:10px;text-align:center">
-        <div class="stat-lbl">網格累積盈虧</div>
-        <div class="stat-val" id="g-pnl">—</div>
-      </div>
-      <!-- 新增表單 -->
-      <div id="grid-form" style="display:none;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:16px">
-        <div style="font-size:13px;font-weight:600;color:var(--soft);margin-bottom:14px">新增網格記錄</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
-          <div><div style="font-size:11px;color:var(--muted);margin-bottom:4px">幣種（如 NEARUSDT）</div><input id="gf-symbol" placeholder="NEARUSDT" style="width:100%;font-size:13px;border:1px solid var(--border);border-radius:8px;padding:7px 10px;background:var(--bg);color:var(--text)"/></div>
-          <div><div style="font-size:11px;color:var(--muted);margin-bottom:4px">進場參考價格</div><input id="gf-entry" type="number" placeholder="2.388" style="width:100%;font-size:13px;border:1px solid var(--border);border-radius:8px;padding:7px 10px;background:var(--bg);color:var(--text)"/></div>
-          <div><div style="font-size:11px;color:var(--muted);margin-bottom:4px">網格下限</div><input id="gf-lower" type="number" placeholder="1.50" style="width:100%;font-size:13px;border:1px solid var(--border);border-radius:8px;padding:7px 10px;background:var(--bg);color:var(--text)"/></div>
-          <div><div style="font-size:11px;color:var(--muted);margin-bottom:4px">網格上限</div><input id="gf-upper" type="number" placeholder="4.00" style="width:100%;font-size:13px;border:1px solid var(--border);border-radius:8px;padding:7px 10px;background:var(--bg);color:var(--text)"/></div>
-          <div><div style="font-size:11px;color:var(--muted);margin-bottom:4px">格數</div><input id="gf-count" type="number" placeholder="20" style="width:100%;font-size:13px;border:1px solid var(--border);border-radius:8px;padding:7px 10px;background:var(--bg);color:var(--text)"/></div>
-          <div><div style="font-size:11px;color:var(--muted);margin-bottom:4px">投入金額 (USDT)</div><input id="gf-invest" type="number" placeholder="600" style="width:100%;font-size:13px;border:1px solid var(--border);border-radius:8px;padding:7px 10px;background:var(--bg);color:var(--text)"/></div>
-          <div><div style="font-size:11px;color:var(--muted);margin-bottom:4px">開始日期</div><input id="gf-start" type="date" style="width:100%;font-size:13px;border:1px solid var(--border);border-radius:8px;padding:7px 10px;background:var(--bg);color:var(--text)"/></div>
-          <div><div style="font-size:11px;color:var(--muted);margin-bottom:4px">結束日期（選填）</div><input id="gf-end" type="date" style="width:100%;font-size:13px;border:1px solid var(--border);border-radius:8px;padding:7px 10px;background:var(--bg);color:var(--text)"/></div>
-        </div>
-        <div style="margin-bottom:10px"><div style="font-size:11px;color:var(--muted);margin-bottom:4px">備註（選填）</div><input id="gf-notes" placeholder="如：日線底部三次測試支撐" style="width:100%;font-size:13px;border:1px solid var(--border);border-radius:8px;padding:7px 10px;background:var(--bg);color:var(--text)"/></div>
-        <div style="display:flex;gap:8px">
-          <button onclick="submitGrid()" style="flex:1;padding:9px;border-radius:10px;border:none;background:var(--coral);color:#fff;font-size:13px;font-weight:600;cursor:pointer">確認新增</button>
-          <button onclick="hideGridForm()" style="padding:9px 16px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:13px;cursor:pointer">取消</button>
-        </div>
-      </div>
-      <div class="sig-history"><div class="sig-history-title">網格記錄</div><div id="g-history"></div></div>
+    <div class="sig-history">
+      <div class="sig-history-title">歷史信號紀錄</div>
+      <div id="p-history"></div>
     </div>
-
     <div style="font-size:10px;color:var(--muted);text-align:center;margin-top:14px;padding-bottom:4px">⚠️ 以上僅供參考，不構成投資建議。加密貨幣具高度風險，請謹慎評估。</div>
   </div>
 </div>
@@ -327,34 +266,13 @@ const IC={
 };
 
 // ── 常數 ────────────────────────────────────────────────
-const SYMS=["BTCUSDT","ETHUSDT","BNBUSDT","SOLUSDT","XRPUSDT","DOGEUSDT","ADAUSDT","AVAXUSDT","TRXUSDT","DOTUSDT","LINKUSDT","LTCUSDT","UNIUSDT","ATOMUSDT","APTUSDT","INJUSDT","ARBUSDT","OPUSDT","SUIUSDT","NEARUSDT","AAVEUSDT","ONDOUSDT","PENDLEUSDT"];
-const NM={BTCUSDT:"Bitcoin",ETHUSDT:"Ethereum",BNBUSDT:"BNB",SOLUSDT:"Solana",XRPUSDT:"XRP",DOGEUSDT:"Dogecoin",ADAUSDT:"Cardano",AVAXUSDT:"Avalanche",TRXUSDT:"TRON",DOTUSDT:"Polkadot",LINKUSDT:"Chainlink",LTCUSDT:"Litecoin",UNIUSDT:"Uniswap",ATOMUSDT:"Cosmos",APTUSDT:"Aptos",INJUSDT:"Injective",ARBUSDT:"Arbitrum",OPUSDT:"Optimism",SUIUSDT:"Sui",NEARUSDT:"NEAR",AAVEUSDT:"Aave",ONDOUSDT:"Ondo Finance",PENDLEUSDT:"Pendle"};
-const BIG_COINS=["BTCUSDT","ETHUSDT","BNBUSDT","SOLUSDT","XRPUSDT","DOGEUSDT","ADAUSDT","AVAXUSDT","TRXUSDT","DOTUSDT"];
-const getSLTP=(sym)=>BIG_COINS.includes(sym)?{sl:0.02,tp:0.04}:{sl:0.03,tp:0.06};
+const SYMS=["BTCUSDT","ETHUSDT","BNBUSDT","SOLUSDT","XRPUSDT","DOGEUSDT","ADAUSDT","AVAXUSDT","TRXUSDT","DOTUSDT","LINKUSDT","LTCUSDT","UNIUSDT","ATOMUSDT","APTUSDT","INJUSDT","ARBUSDT","OPUSDT","SUIUSDT","NEARUSDT"];
+const NM={BTCUSDT:"Bitcoin",ETHUSDT:"Ethereum",BNBUSDT:"BNB",SOLUSDT:"Solana",XRPUSDT:"XRP",DOGEUSDT:"Dogecoin",ADAUSDT:"Cardano",AVAXUSDT:"Avalanche",TRXUSDT:"TRON",DOTUSDT:"Polkadot",LINKUSDT:"Chainlink",LTCUSDT:"Litecoin",UNIUSDT:"Uniswap",ATOMUSDT:"Cosmos",APTUSDT:"Aptos",INJUSDT:"Injective",ARBUSDT:"Arbitrum",OPUSDT:"Optimism",SUIUSDT:"Sui",NEARUSDT:"NEAR"};
+const SLP=0.03,TPP=0.06;
 const SUPABASE_URL="https://blivdibgijnpoeumfloe.supabase.co";
 const SUPABASE_KEY="sb_publishable_TVMXh4lriOqg4PVOhJ6KQw_drQ1FjcJ";
 
-const VERSIONS={
-  "CryptoSignalTony_V1":{
-    date:"2026-05-19 起",
-    desc:"RSI收緊至<30/>70，大幣止損2%止盈4%，小幣止損3%止盈6%，加入500根K棒高低點過濾（1小時K）"
-  },
-  "布林帶策略":{
-    date:"2026-06-07 起",
-    desc:"布林帶收縮突破（4小時K）+ 成交量確認，帶寬小於150根平均70%才進場，順勢策略"
-  },
-  "網格策略":{
-    date:"2026-05-24 起",
-    desc:"手動輸入網格記錄，自行判斷幣種形態，統計網格策略勝率和累積盈虧"
-  },
-  "CryptoSignalTony舊策略":{
-    date:"~ 2026-05-18",
-    desc:"初始策略：RSI<40/60 + KD金叉死叉，止盈6% 止損3%，無高低點過濾"
-  },
-  "全部":{date:"",desc:""}
-};
-
-let D={},openSignals=[],allSignals=[],gridData=[],currentTab="market",loaded=false,currentVersion="CryptoSignalTony_V1";
+let D={},openSignals=[],allSignals=[],currentTab="market",loaded=false;
 
 // ── Supabase ─────────────────────────────────────────────
 async function sbGet(path){
@@ -366,7 +284,8 @@ async function sbGet(path){
   }catch{return[];}
 }
 async function loadSignals(){
-  allSignals=await sbGet("signals?select=*&order=created_at.desc&limit=500");
+  const oneWeekAgo=new Date(Date.now()-7*24*60*60*1000).toISOString();
+  allSignals=await sbGet(`signals?select=*&order=created_at.desc&created_at=gte.${oneWeekAgo}&limit=500`);
   openSignals=allSignals.filter(s=>s.status==="OPEN");
 }
 
@@ -406,25 +325,18 @@ function calcKD(h,lo,c,p=9,sk=3,sd=3){
   const da=[ka[0]];for(let i=1;i<ka.length;i++)da.push(ka[i]*dm+da[i-1]*(1-dm));
   return{k:+ka[ka.length-1].toFixed(1),d:+da[da.length-1].toFixed(1),pk:+ka[ka.length-2].toFixed(1),pd:+da[da.length-2].toFixed(1)};
 }
-function buildSig(c,sym){
+function buildSig(c){
   if(!c||!c.rsi||!c.kd)return{s:"HOLD"};
-  const{rsi:r,kd:k,price:p,high500,low500}=c;
-  const{sl:SLP,tp:TPP}=getSLTP(sym||"BTCUSDT");
+  const{rsi:r,kd:k,tr,price:p}=c;
   const gx=k.pk<=k.pd&&k.k>k.d,dx=k.pk>=k.pd&&k.k<k.d;
-  if(gx&&k.k<30&&k.d<30&&r<30){
-    const sl=+(p*(1-SLP)).toFixed(4),tp=+(p*(1+TPP)).toFixed(4);
-    if(!high500||!low500||( sl>low500&&tp<high500))
-      return{s:"LONG",sl,tp,slPct:SLP*100,tpPct:TPP*100,
-        reason:`KD金叉（K=${k.k} 穿越 D=${k.d}）\nRSI超賣 ${r}，反彈機率高`,type:"KD金叉反彈",
-        time:new Date().toLocaleString("zh-TW",{timeZone:"Asia/Taipei"})};
-  }
-  if(dx&&k.k>70&&k.d>70&&r>70){
-    const sl=+(p*(1+SLP)).toFixed(4),tp=+(p*(1-TPP)).toFixed(4);
-    if(!high500||!low500||(sl<high500&&tp>low500))
-      return{s:"SHORT",sl,tp,slPct:SLP*100,tpPct:TPP*100,
-        reason:`KD死叉（K=${k.k} 跌破 D=${k.d}）\nRSI超買 ${r}，回調風險高`,type:"KD死叉反壓",
-        time:new Date().toLocaleString("zh-TW",{timeZone:"Asia/Taipei"})};
-  }
+  if(gx&&k.k<30&&k.d<30&&r<40&&tr!=="BEAR")
+    return{s:"LONG",sl:+(p*(1-SLP)).toFixed(4),tp:+(p*(1+TPP)).toFixed(4),
+      reason:`KD金叉（K=${k.k} 穿越 D=${k.d}）\nRSI超賣 ${r}，反彈機率高`,type:"KD金叉反彈",
+      time:new Date().toLocaleString("zh-TW",{timeZone:"Asia/Taipei"})};
+  if(dx&&k.k>70&&k.d>70&&r>60&&tr!=="BULL")
+    return{s:"SHORT",sl:+(p*(1+SLP)).toFixed(4),tp:+(p*(1-TPP)).toFixed(4),
+      reason:`KD死叉（K=${k.k} 跌破 D=${k.d}）\nRSI超買 ${r}，回調風險高`,type:"KD死叉反壓",
+      time:new Date().toLocaleString("zh-TW",{timeZone:"Asia/Taipei"})};
   if((k.k<35&&r<45)||(k.k>65&&r>55))return{s:"WATCH"};
   return{s:"HOLD"};
 }
@@ -455,28 +367,15 @@ function calcLivePnl(openSig,currentPrice){
 function renderCard(sym){
   const c=D[sym];if(!c)return"";
   const openSig=openSignals.find(s=>s.symbol===sym&&s.status==="OPEN");
-  const sg=openSig?{s:"HOLDING",dir:openSig.direction}:buildSig(c,sym);
+  const sg=openSig?{s:"HOLDING"}:buildSig(c);
   const up=c.change24h>=0;
   const rc=rsiColor(c.rsi);
 
-  // 持倉中根據方向決定class
-  const cardClass=sg.s==="HOLDING"
-    ?(sg.dir==="LONG"?"sHOLDING_LONG":"sHOLDING_SHORT")
-    :"s"+sg.s;
-
-  // 持倉中根據方向決定pill顏色
-  const holdingColor=sg.s==="HOLDING"
-    ?(sg.dir==="LONG"?"#28a870":"#e04858")
-    :sg.s==="LONG"?"#28a870":sg.s==="SHORT"?"#e04858":sg.s==="WATCH"?"#d4903a":"#c4a898";
-
+  // signal pill icon
   const pillIcon=sg.s==="LONG"?`<svg class="ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>`
     :sg.s==="SHORT"?`<svg class="ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>`
-    :(sg.s==="HOLDING"&&sg.dir==="LONG")?`<svg class="ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M3 12h3M18 12h3M12 3v3M12 18v3"/></svg>`
-    :(sg.s==="HOLDING"&&sg.dir==="SHORT")?`<svg class="ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>`
+    :sg.s==="HOLDING"?`<svg class="ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M3 12h3M18 12h3M12 3v3M12 18v3"/></svg>`
     :`<svg class="ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 12h8"/></svg>`;
-
-  const pillClass=sg.s==="HOLDING"?(sg.dir==="LONG"?"LONG":"SHORT"):sg.s;
-  const pillLabel=sg.s==="HOLDING"?(sg.dir==="LONG"?"持倉做多":"持倉做空"):SL2[sg.s];
 
   let pnlHTML="";
   if(openSig){
@@ -484,7 +383,7 @@ function renderCard(sym){
     if(pnl!==null)pnlHTML=`<div class="pnl-tag" style="color:${pnl>=0?"#28a870":"#e04858"}">${pnl>=0?"+":""}${pnl}%</div>`;
   }
 
-  return`<div class="ccard ${cardClass}" onclick="openP('${sym}')">
+  return`<div class="ccard s${sg.s}" onclick="openP('${sym}')">
     <div class="cc-sym">${sym.replace("USDT","")}</div>
     <div class="cc-name">${NM[sym]||""}</div>
     <div class="cc-price">$${fmt(c.price)}</div>
@@ -500,7 +399,7 @@ function renderCard(sym){
       <span class="kd-badge" style="color:${kdColor(c.kd?.k)}">K ${c.kd?.k||"…"}</span>
       <span class="kd-badge">D ${c.kd?.d||"…"}</span>
     </div>
-    <span class="spill ${pillClass}" style="color:${holdingColor}">${pillIcon} ${pillLabel}</span>
+    <span class="spill ${sg.s}" style="color:${sg.s==="LONG"?"#28a870":sg.s==="SHORT"?"#e04858":sg.s==="WATCH"?"#d4903a":"#c4a898"}">${pillIcon} ${SL2[sg.s]}</span>
     ${pnlHTML}
   </div>`;
 }
@@ -508,15 +407,15 @@ function renderCard(sym){
 // ── Render list ───────────────────────────────────────────
 function renderList(containerId,filter){
   const show=filter==="all"?SYMS
-    :filter==="long"?SYMS.filter(s=>{const o=openSignals.find(x=>x.symbol===s);return o?.direction==="LONG"||(!o&&buildSig(D[s]||{},s).s==="LONG");})
-    :SYMS.filter(s=>{const o=openSignals.find(x=>x.symbol===s);return o?.direction==="SHORT"||(!o&&buildSig(D[s]||{},s).s==="SHORT");});
+    :filter==="long"?SYMS.filter(s=>{const o=openSignals.find(x=>x.symbol===s);return o?.direction==="LONG"||(!o&&buildSig(D[s]||{}).s==="LONG");})
+    :SYMS.filter(s=>{const o=openSignals.find(x=>x.symbol===s);return o?.direction==="SHORT"||(!o&&buildSig(D[s]||{}).s==="SHORT");});
   const el=document.getElementById(containerId);
   if(el)el.innerHTML=show.map(renderCard).join("")||`<div class="empty-state">目前沒有符合條件的信號</div>`;
 }
 
 function render(){
-  const longs=SYMS.filter(s=>{const o=openSignals.find(x=>x.symbol===s);return o?.direction==="LONG"||(!o&&buildSig(D[s]||{},s).s==="LONG");});
-  const shorts=SYMS.filter(s=>{const o=openSignals.find(x=>x.symbol===s);return o?.direction==="SHORT"||(!o&&buildSig(D[s]||{},s).s==="SHORT");});
+  const longs=SYMS.filter(s=>{const o=openSignals.find(x=>x.symbol===s);return o?.direction==="LONG"||(!o&&buildSig(D[s]||{}).s==="LONG");});
+  const shorts=SYMS.filter(s=>{const o=openSignals.find(x=>x.symbol===s);return o?.direction==="SHORT"||(!o&&buildSig(D[s]||{}).s==="SHORT");});
   document.getElementById("cl").textContent=longs.length?`(${longs.length})`:"";
   document.getElementById("cs").textContent=shorts.length?`(${shorts.length})`:"";
   const bn=document.getElementById("banner");
@@ -535,129 +434,6 @@ function render(){
 }
 
 // ── Performance ───────────────────────────────────────────
-async function loadGrids(){
-  gridData=await sbGet("grids?select=*&order=created_at.desc");
-}
-
-async function manualClose(id){
-  const sig=allSignals.find(s=>s.id===id);
-  if(!sig)return;
-  const exitPrice=prompt(`手動平倉｜${sig.symbol.replace("USDT","")}/USDT\n請輸入出場價格：`);
-  if(!exitPrice||isNaN(parseFloat(exitPrice)))return;
-  const entry=parseFloat(sig.entry_price);
-  const exit=parseFloat(exitPrice);
-  const pnlPct=sig.direction==="LONG"?+((exit-entry)/entry*100).toFixed(2):+((entry-exit)/entry*100).toFixed(2);
-  const result=pnlPct>=0?"WIN":"LOSS";
-  const ok=window.confirm(`出場價：$${exit}\n損益：${pnlPct>=0?"+":""}${pnlPct}%\n結果：${result==="WIN"?"獲利":"虧損"}\n\n確認平倉？`);
-  if(!ok)return;
-  try{
-    await fetch(`${SUPABASE_URL}/rest/v1/signals?id=eq.${id}`,{
-      method:"PATCH",
-      headers:{"apikey":SUPABASE_KEY,"Authorization":`Bearer ${SUPABASE_KEY}`,"Content-Type":"application/json","Prefer":"return=minimal"},
-      body:JSON.stringify({status:result,result,exit_price:exit,pnl_pct:pnlPct,actual_pnl:pnlPct,closed_at:new Date().toISOString()})
-    });
-    await loadSignals();render();renderPerf();
-    alert(`已記錄平倉！${pnlPct>=0?"+":""}${pnlPct}%`);
-  }catch(e){alert("平倉記錄失敗");console.error(e);}
-}
-
-function showGridForm(){document.getElementById("grid-form").style.display="block";}
-function hideGridForm(){document.getElementById("grid-form").style.display="none";}
-
-async function submitGrid(){
-  const sym=(document.getElementById("gf-symbol").value||"").trim().toUpperCase();
-  const entry=parseFloat(document.getElementById("gf-entry").value);
-  const lower=parseFloat(document.getElementById("gf-lower").value);
-  const upper=parseFloat(document.getElementById("gf-upper").value);
-  const count=parseInt(document.getElementById("gf-count").value);
-  const invest=parseFloat(document.getElementById("gf-invest").value);
-  const start=document.getElementById("gf-start").value;
-  const end=document.getElementById("gf-end").value;
-  const notes=document.getElementById("gf-notes").value;
-  if(!sym||!entry||!lower||!upper||!count||!invest||!start){alert("請填寫必要欄位");return;}
-  try{
-    const res=await fetch(`${SUPABASE_URL}/rest/v1/grids`,{
-      method:"POST",
-      headers:{"apikey":SUPABASE_KEY,"Authorization":`Bearer ${SUPABASE_KEY}`,"Content-Type":"application/json","Prefer":"return=representation"},
-      body:JSON.stringify({symbol:sym,entry_price:entry,lower_price:lower,upper_price:upper,grid_count:count,total_investment:invest,start_date:start,end_date:end||null,notes:notes||null,status:"RUNNING"})
-    });
-    if(res.ok){
-      hideGridForm();
-      ["gf-symbol","gf-entry","gf-lower","gf-upper","gf-count","gf-invest","gf-start","gf-end","gf-notes"].forEach(id=>{document.getElementById(id).value="";});
-      await loadGrids();renderGridPerf();
-    }else{alert("新增失敗，請重試");}
-  }catch(e){alert("新增失敗");console.error(e);}
-}
-
-async function updateGrid(id,field,value){
-  const body={};
-  if(field==="actual_pnl")body.actual_pnl=value===""?null:parseFloat(value);
-  if(field==="status"){body.status=value;if(value==="WIN"||value==="LOSS")body.end_date=new Date().toISOString().split("T")[0];}
-  try{
-    await fetch(`${SUPABASE_URL}/rest/v1/grids?id=eq.${id}`,{
-      method:"PATCH",
-      headers:{"apikey":SUPABASE_KEY,"Authorization":`Bearer ${SUPABASE_KEY}`,"Content-Type":"application/json","Prefer":"return=minimal"},
-      body:JSON.stringify(body)
-    });
-    const g=gridData.find(x=>x.id===id);
-    if(g){if(field==="actual_pnl")g.actual_pnl=body.actual_pnl;if(field==="status")g.status=body.status;}
-    renderGridPerf();
-  }catch(e){console.error(e);}
-}
-
-function renderGridPerf(){
-  const closed=gridData.filter(g=>g.status==="WIN"||g.status==="LOSS");
-  const wins=gridData.filter(g=>g.status==="WIN");
-  const losses=gridData.filter(g=>g.status==="LOSS");
-  const wr=closed.length?Math.round((wins.length/closed.length)*100):0;
-  document.getElementById("g-total").textContent=gridData.length||"—";
-  document.getElementById("g-wr").textContent=closed.length?`${wr}%`:"—";
-  document.getElementById("g-win").textContent=wins.length;
-  document.getElementById("g-loss").textContent=losses.length;
-  const withPnl=gridData.filter(g=>g.actual_pnl!=null);
-  const totalPnl=withPnl.reduce((sum,g)=>sum+parseFloat(g.actual_pnl),0);
-  const gpnlEl=document.getElementById("g-pnl");
-  if(withPnl.length===0){gpnlEl.textContent="—";gpnlEl.className="stat-val";}
-  else{gpnlEl.textContent=`${totalPnl>=0?"+":""}${totalPnl.toFixed(2)} USDT`;gpnlEl.className=`stat-val ${totalPnl>=0?"green":"red"}`;}
-  const ghist=gridData.length===0
-    ?`<div class="empty-state">尚無網格記錄<br><span style="font-size:11px">點上方「+ 新增網格」開始記錄</span></div>`
-    :gridData.map(g=>{
-      const rb=g.status==="RUNNING"?"OPEN":g.status==="WIN"?"WIN":"LOSS";
-      const rl=g.status==="RUNNING"?"運行中":g.status==="WIN"?"獲利":"虧損";
-      const rangePct=g.lower_price&&g.upper_price?((g.upper_price-g.lower_price)/g.lower_price*100).toFixed(0):"-";
-      return`<div class="sig-row" style="flex-wrap:wrap;gap:8px">
-        <div style="display:flex;align-items:center;gap:10px;width:100%">
-          <div class="sig-row-dir LONG"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--long)" stroke-width="2.5" stroke-linecap="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/></svg></div>
-          <div class="sig-row-info">
-            <div class="sig-row-sym">${g.symbol.replace("USDT","")}/USDT 網格</div>
-            <div class="sig-row-date">${g.start_date}${g.end_date?" → "+g.end_date:""} · ${g.grid_count}格 · $${g.lower_price}-$${g.upper_price}（${rangePct}%）</div>
-          </div>
-          <div class="sig-row-price">進場 $${fmt(g.entry_price)}<br>${g.total_investment}U</div>
-          <span class="result-badge ${rb}">${rl}</span>
-        </div>
-        <div style="display:flex;gap:8px;width:100%;padding-left:38px;flex-wrap:wrap">
-          <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--soft)">
-            <span>狀態</span>
-            <select onchange="updateGrid(${g.id},'status',this.value)" style="font-size:11px;border:1px solid var(--border);border-radius:6px;padding:2px 6px;background:var(--bg);color:var(--text);cursor:pointer">
-              <option value="RUNNING" ${g.status==="RUNNING"?"selected":""}>運行中</option>
-              <option value="WIN" ${g.status==="WIN"?"selected":""}>獲利結束</option>
-              <option value="LOSS" ${g.status==="LOSS"?"selected":""}>虧損結束</option>
-            </select>
-          </div>
-          <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--soft)">
-            <span>實際盈虧</span>
-            <input type="number" step="0.01" placeholder="填入金額" value="${g.actual_pnl||""}"
-              onblur="updateGrid(${g.id},'actual_pnl',this.value)"
-              style="font-size:11px;border:1px solid var(--border);border-radius:6px;padding:2px 8px;background:var(--bg);color:var(--text);width:80px;font-family:var(--mono)"/>
-            <span style="color:var(--muted)">USDT</span>
-          </div>
-          ${g.notes?`<div style="font-size:11px;color:var(--muted);width:100%">備註：${g.notes}</div>`:""}
-        </div>
-      </div>`;
-    }).join("");
-  document.getElementById("g-history").innerHTML=ghist;
-}
-
 async function updateSignal(id, field, value){
   try{
     const body={};
@@ -681,77 +457,29 @@ async function updateSignal(id, field, value){
   }catch(e){console.error("更新失敗",e);}
 }  
 function renderPerf(){
-  // 版本說明
-  const vInfo=VERSIONS[currentVersion];
-  const descEl=document.getElementById("version-desc");
-  if(descEl){
-    if(vInfo&&vInfo.desc){
-      descEl.innerHTML=`<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:14px">
-        <div style="font-size:10px;color:var(--muted);font-weight:600;letter-spacing:.3px;text-transform:uppercase;margin-bottom:5px">策略說明 ${vInfo.date?"· "+vInfo.date:""}</div>
-        <div style="font-size:12px;color:var(--soft);line-height:1.6">${vInfo.desc}</div>
-      </div>`;
-    } else { descEl.innerHTML=""; }
-  }
-
-  // 切換顯示區塊
-  const isGrid=currentVersion==="網格策略";
-  const signalSec=document.getElementById("perf-signal-section");
-  const gridSec=document.getElementById("perf-grid-section");
-  if(signalSec) signalSec.style.display=isGrid?"none":"block";
-  if(gridSec) gridSec.style.display=isGrid?"block":"none";
-  if(isGrid){ renderGridPerf(); return; }
-
-  // 合約信號版本篩選
-  const filtered=currentVersion==="全部"?allSignals
-    :currentVersion==="CryptoSignalTony舊策略"
-      ?allSignals.filter(s=>!s.version||s.version==="CryptoSignalTony舊策略")
-      :allSignals.filter(s=>s.version===currentVersion);
-
-  const closed=filtered.filter(s=>s.status!=="OPEN");
+  const closed=allSignals.filter(s=>s.status!=="OPEN");
   const wins=closed.filter(s=>s.result==="WIN");
   const losses=closed.filter(s=>s.result==="LOSS");
   const wr=closed.length?Math.round((wins.length/closed.length)*100):0;
-  document.getElementById("p-total").textContent=filtered.length;
+  document.getElementById("p-total").textContent=allSignals.length;
   document.getElementById("p-wr").textContent=closed.length?`${wr}%`:"—";
   document.getElementById("p-win").textContent=wins.length;
   document.getElementById("p-loss").textContent=losses.length;
   document.getElementById("p-bar").style.width=closed.length?`${wr}%`:"0%";
-
-  // 累積盈虧
-  const entered=filtered.filter(s=>s.entered===true&&s.actual_pnl!=null);
-  const totalPnl=entered.reduce((sum,s)=>sum+parseFloat(s.actual_pnl),0);
-  const pnlEl=document.getElementById("p-pnl");
-  if(pnlEl){
-    if(entered.length===0){pnlEl.textContent="—";pnlEl.className="stat-val";}
-    else{pnlEl.textContent=`${totalPnl>=0?"+":""}${totalPnl.toFixed(2)} USDT`;pnlEl.className=`stat-val ${totalPnl>=0?"green":"red"}`;}
-  }
-
-  // 歷史記錄（未進場的隱藏）
-  const visible=filtered.filter(s=>s.entered!==false);
-  const histHTML=visible.length===0
+  const histHTML=allSignals.length===0
     ?`<div class="empty-state">尚無信號紀錄<br><span style="font-size:11px">等待第一個信號出現</span></div>`
-    :visible.map(sig=>{
-        // 美股邏輯：做多紅，做空綠
-        const longColor="#e04858";
-        const shortColor="#28a870";
-        const dir=sig.direction==="LONG"
-          ?`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="${longColor}" stroke-width="2.5" stroke-linecap="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>`
-          :`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="${shortColor}" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>`;
+    :allSignals.map(sig=>{
+        const dir=sig.direction==="LONG"?`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#28a870" stroke-width="2.5" stroke-linecap="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>`
+          :`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#e04858" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>`;
         const dt=new Date(sig.created_at).toLocaleString("zh-TW",{timeZone:"Asia/Taipei",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"});
         const rb=sig.status==="OPEN"?"OPEN":sig.result==="WIN"?"WIN":"LOSS";
-        const rl=sig.status==="OPEN"?"持倉中":sig.result==="WIN"?`+${sig.pnl_pct||""}%`:`${sig.pnl_pct||""}%`;
-        const vBadge=sig.version?`<span style="font-size:9px;padding:1px 6px;border-radius:8px;background:rgba(0,0,0,.06);color:var(--muted)">${sig.version}</span>`:"";
-        const manualBtn=sig.status==="OPEN"
-          ?`<button onclick="manualClose(${sig.id})" style="font-size:11px;padding:3px 10px;border-radius:8px;border:1px solid var(--coral);background:rgba(224,96,80,.08);color:var(--coral);cursor:pointer;font-weight:600">手動平倉</button>`:"";
+        const rl=sig.status==="OPEN"?"持倉中":sig.result==="WIN"?"+6%":"-3%";
         return`<div class="sig-row" style="flex-wrap:wrap;gap:8px">
           <div style="display:flex;align-items:center;gap:10px;width:100%">
             <div class="sig-row-dir ${sig.direction}">${dir}</div>
-            <div class="sig-row-info">
-              <div class="sig-row-sym">${sig.symbol.replace("USDT","")}/USDT ${vBadge}</div>
-              <div class="sig-row-date">${dt} · ${sig.signal_type||""}</div>
-            </div>
+            <div class="sig-row-info"><div class="sig-row-sym">${sig.symbol.replace("USDT","")}/USDT</div><div class="sig-row-date">${dt} · ${sig.signal_type||""}</div></div>
             <div class="sig-row-price">進 $${fmt(sig.entry_price)}<br>損 $${fmt(sig.sl_price)}</div>
-            <div style="display:flex;align-items:center;gap:6px"><span class="result-badge ${rb}">${rl}</span>${manualBtn}</div>
+            <div><span class="result-badge ${rb}">${rl}</span></div>
           </div>
           <div style="display:flex;gap:8px;width:100%;padding-left:38px;flex-wrap:wrap">
             <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--soft)">
@@ -763,14 +491,19 @@ function renderPerf(){
               </select>
             </div>
             <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--soft)">
-              <span>實際盈虧</span>
-              <input type="number" step="0.01" placeholder="填入金額" value="${sig.actual_pnl||""}"
-                onblur="updateSignal(${sig.id},'actual_pnl',this.value)"
-                style="font-size:11px;border:1px solid var(--border);border-radius:6px;padding:2px 8px;background:var(--bg);color:var(--text);width:80px;font-family:var(--mono)"/>
-              <span style="color:var(--muted)">USDT</span>
-            </div>
-          </div>
-        </div>`;
+  <span>實際盈虧</span>
+  <input
+    type="number"
+    step="0.01"
+    placeholder="填入金額"
+    value="${sig.actual_pnl || ""}"
+    onblur="updateSignal(${sig.id},'actual_pnl',this.value)"
+    style="font-size:11px;border:1px solid var(--border);border-radius:6px;padding:2px 8px;background:var(--bg);color:var(--text);width:80px;font-family:var(--mono)"
+  />
+  <span style="color:var(--muted)">USDT</span>
+</div>
+</div>
+</div>`;
       }).join("");
   document.getElementById("p-history").innerHTML=histHTML;
 }
@@ -889,15 +622,11 @@ function setTab(tab,el){
 
 // ── Load ─────────────────────────────────────────────────
 async function load(sym,i){
-  const[h1,tk]=await Promise.all([bk(sym,"60",500),bt(sym)]);
-  if(!h1||!tk)return;
-  D[sym]={
-    price:tk.p,change24h:tk.ch,
-    rsi:calcRSI(h1.c),
-    kd:calcKD(h1.h,h1.lo,h1.c),
-    high500:Math.max(...h1.h),
-    low500:Math.min(...h1.lo),
-  };
+  const[h1,dy,tk]=await Promise.all([bk(sym,"60",500),bk(sym,"D",50),bt(sym)]);
+  if(!h1||!dy||!tk)return;
+  const dm13=ma(dy.c,13),dm34=ma(dy.c,34);
+  D[sym]={price:tk.p,change24h:tk.ch,rsi:calcRSI(h1.c),kd:calcKD(h1.h,h1.lo,h1.c),
+    tr:dm13&&dm34?(dm13>dm34*1.02?"BULL":dm13<dm34*0.98?"BEAR":"NEUTRAL"):"NEUTRAL"};
   document.getElementById("load-n").textContent=`${i+1} / ${SYMS.length}`;
   document.getElementById("pgfill").style.width=`${((i+1)/SYMS.length)*100}%`;
 }
@@ -905,7 +634,6 @@ async function load(sym,i){
 async function init(){
   document.getElementById("pgwrap").style.display="block";
   await loadSignals();
-  await loadGrids();
   for(let i=0;i<SYMS.length;i++){
     await load(SYMS[i],i);
     if(i%4===3)await new Promise(r=>setTimeout(r,80));
@@ -919,9 +647,7 @@ async function init(){
     render();
   },30000);
   setInterval(async()=>{
-    await loadSignals();
-    await loadGrids();
-    render();
+    await loadSignals();render();
     if(currentTab==="perf")renderPerf();
   },5*60*1000);
   setInterval(async()=>{
