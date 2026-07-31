@@ -328,9 +328,7 @@ const SYMS=["BTCUSDT","ETHUSDT","BNBUSDT","SOLUSDT","XRPUSDT","DOGEUSDT","ADAUSD
 const NM={BTCUSDT:"Bitcoin",ETHUSDT:"Ethereum",BNBUSDT:"BNB",SOLUSDT:"Solana",XRPUSDT:"XRP",DOGEUSDT:"Dogecoin",ADAUSDT:"Cardano",AVAXUSDT:"Avalanche",TRXUSDT:"TRON",DOTUSDT:"Polkadot",LINKUSDT:"Chainlink",LTCUSDT:"Litecoin",UNIUSDT:"Uniswap",ATOMUSDT:"Cosmos",APTUSDT:"Aptos",INJUSDT:"Injective",ARBUSDT:"Arbitrum",OPUSDT:"Optimism",SUIUSDT:"Sui",NEARUSDT:"NEAR"};
 const BIG_COINS=new Set(["BTCUSDT","ETHUSDT","BNBUSDT","SOLUSDT","XRPUSDT"]);
 const getSLTP=(sym)=>BIG_COINS.has(sym)?{sl:0.02,tp:0.04}:{sl:0.03,tp:0.06};
-const SLP=0.03,TPP=0.06; // 保留相容，buildSig內部會動態取
-const BIG_COINS=["BTCUSDT","ETHUSDT","BNBUSDT","SOLUSDT","XRPUSDT","DOGEUSDT","ADAUSDT","AVAXUSDT","TRXUSDT","DOTUSDT"];
-const getSLTP=(sym)=>BIG_COINS.includes(sym)?{sl:0.02,tp:0.04}:{sl:0.03,tp:0.06};
+const SLP=0.03,TPP=0.06;
 const SUPABASE_URL="https://blivdibgijnpoeumfloe.supabase.co";
 const SUPABASE_KEY="sb_publishable_TVMXh4lriOqg4PVOhJ6KQw_drQ1FjcJ";
 
