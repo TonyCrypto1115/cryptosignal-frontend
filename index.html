@@ -226,13 +226,19 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
     <!-- 版本選擇器 -->
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
       <span style="font-size:12px;font-weight:600;color:var(--muted)">策略版本</span>
-      <select onchange="currentVersion=this.value;renderPerf()" id="version-select"
+      <select onchange="onVersionChange(this.value)" id="version-select"
         style="font-size:12px;border:1px solid var(--border);border-radius:8px;padding:4px 10px;background:var(--bg);color:var(--text);cursor:pointer;font-weight:600">
-        <option value="布林帶策略">布林帶策略</option>
-        <option value="全部">全部</option>
-        <option value="CryptoSignalTony_V1">CryptoSignalTony_V1</option>
-        <option value="CryptoSignalTony舊策略">CryptoSignalTony舊策略</option>
-        <option value="網格策略">網格策略</option>
+        <optgroup label="現行策略">
+          <option value="CryptoSignalTony_V1.1">V1.1 KD+RSI</option>
+          <option value="布林帶策略_V1.1">V1.1 布林帶</option>
+          <option value="全部">全部（現行）</option>
+          <option value="網格策略">網格策略</option>
+        </optgroup>
+        <optgroup label="歷史紀錄（量測有偏差，不計入勝率）">
+          <option value="布林帶策略">舊 · 布林帶策略</option>
+          <option value="CryptoSignalTony_V1">舊 · V1</option>
+          <option value="CryptoSignalTony舊策略">舊 · 初始策略</option>
+        </optgroup>
       </select>
     </div>
     <div id="version-desc" style="margin-bottom:10px"></div>
@@ -324,23 +330,50 @@ const IC={
 };
 
 // ── 常數 ────────────────────────────────────────────────
-const SYMS=["BTCUSDT","ETHUSDT","BNBUSDT","SOLUSDT","XRPUSDT","DOGEUSDT","ADAUSDT","AVAXUSDT","TRXUSDT","DOTUSDT","LINKUSDT","LTCUSDT","UNIUSDT","ATOMUSDT","APTUSDT","INJUSDT","ARBUSDT","OPUSDT","SUIUSDT","NEARUSDT"];
-const NM={BTCUSDT:"Bitcoin",ETHUSDT:"Ethereum",BNBUSDT:"BNB",SOLUSDT:"Solana",XRPUSDT:"XRP",DOGEUSDT:"Dogecoin",ADAUSDT:"Cardano",AVAXUSDT:"Avalanche",TRXUSDT:"TRON",DOTUSDT:"Polkadot",LINKUSDT:"Chainlink",LTCUSDT:"Litecoin",UNIUSDT:"Uniswap",ATOMUSDT:"Cosmos",APTUSDT:"Aptos",INJUSDT:"Injective",ARBUSDT:"Arbitrum",OPUSDT:"Optimism",SUIUSDT:"Sui",NEARUSDT:"NEAR"};
+const SYMS=["BTCUSDT","ETHUSDT","BNBUSDT","SOLUSDT","XRPUSDT","DOGEUSDT","ADAUSDT","AVAXUSDT","TRXUSDT","DOTUSDT","LINKUSDT","LTCUSDT","UNIUSDT","ATOMUSDT","APTUSDT","INJUSDT","ARBUSDT","OPUSDT","SUIUSDT","NEARUSDT","AAVEUSDT","ONDOUSDT","PENDLEUSDT"];
+const NM={BTCUSDT:"Bitcoin",ETHUSDT:"Ethereum",BNBUSDT:"BNB",SOLUSDT:"Solana",XRPUSDT:"XRP",DOGEUSDT:"Dogecoin",ADAUSDT:"Cardano",AVAXUSDT:"Avalanche",TRXUSDT:"TRON",DOTUSDT:"Polkadot",LINKUSDT:"Chainlink",LTCUSDT:"Litecoin",UNIUSDT:"Uniswap",ATOMUSDT:"Cosmos",APTUSDT:"Aptos",INJUSDT:"Injective",ARBUSDT:"Arbitrum",OPUSDT:"Optimism",SUIUSDT:"Sui",NEARUSDT:"NEAR",AAVEUSDT:"Aave",ONDOUSDT:"Ondo",PENDLEUSDT:"Pendle"};
 const BIG_COINS=new Set(["BTCUSDT","ETHUSDT","BNBUSDT","SOLUSDT","XRPUSDT"]);
 const getSLTP=(sym)=>BIG_COINS.has(sym)?{sl:0.02,tp:0.04}:{sl:0.03,tp:0.06};
-const SLP=0.03,TPP=0.06;
 const SUPABASE_URL="https://blivdibgijnpoeumfloe.supabase.co";
 const SUPABASE_KEY="sb_publishable_TVMXh4lriOqg4PVOhJ6KQw_drQ1FjcJ";
+// ⚠️ 改成你的 Railway 網址。所有寫入都走這裡，資料庫本身只開放讀取。
+const API_BASE="https://cryptosignal-backend-production.up.railway.app";
 
 const VERSIONS={
   "全部":{date:"",desc:""},
-  "布林帶策略":{date:"2026-06-07 起",desc:"布林帶收縮突破（4小時K）+ 成交量確認，帶寬小於150根平均70%才進場，順勢策略"},
-  "CryptoSignalTony_V1":{date:"2026-05-19 起",desc:"RSI收緊至<30/>70，大幣止損2%止盈4%，小幣止損3%止盈6%，加入500根K棒高低點過濾（1小時K）"},
-  "CryptoSignalTony舊策略":{date:"~ 2026-05-18",desc:"初始策略：RSI<40/60 + KD金叉死叉，止盈6% 止損3%，無高低點過濾"},
+  "CryptoSignalTony_V1.1":{date:"2026-08-01 起",desc:"KD金叉死叉 + RSI（1小時K）+ 日線趨勢過濾。本版起：只用已收盤K棒判斷、以1分K高低點追蹤（抓得到插針）、48小時未發動即時間出場、損益已扣除0.13%來回成本。"},
+  "布林帶策略_V1.1":{date:"2026-08-01 起",desc:"布林帶收縮突破（4小時K）。本版起：帶寬需落在過去150根最窄的20%（舊版是「低於平均」，約一半時間都成立）、要求真正的軌道穿越、成交量以已收盤K棒計算、72小時時間出場。"},
+  "布林帶策略":{date:"2026-06-07 ~ 07-31",desc:"⚠️ 舊資料。突破判斷有誤（實際只檢查「現價高於上軌」）、收縮門檻過鬆、使用未收盤K棒。僅供記錄，不計入勝率。"},
+  "CryptoSignalTony_V1":{date:"2026-05-19 ~ 07-31",desc:"⚠️ 舊資料。程式實際跑的是 RSI<40/>60（非文件所寫的 30/70），且高低點過濾並未實作。僅供記錄，不計入勝率。"},
+  "CryptoSignalTony舊策略":{date:"~ 2026-05-18",desc:"⚠️ 舊資料。初始策略：RSI<40/60 + KD金叉死叉，止盈6% 止損3%。僅供記錄，不計入勝率。"},
   "網格策略":{date:"2026-05-24 起",desc:"手動輸入網格記錄，自行判斷幣種形態，統計網格策略勝率和累積盈虧"},
 };
+// 這些版本的量測方式有已知偏差，預設不計入主要勝率
+const LEGACY_VERSIONS=new Set(["布林帶策略","CryptoSignalTony_V1","CryptoSignalTony舊策略"]);
 
-let D={},openSignals=[],allSignals=[],recentSignals=[],gridData=[],currentTab="market",loaded=false,currentVersion="布林帶策略";
+let D={},openSignals=[],allSignals=[],recentSignals=[],gridData=[],currentTab="market",loaded=false,currentVersion="CryptoSignalTony_V1.1",dataError=false;
+
+// ── 寫入一律走後端 ────────────────────────────────────────
+function getAdminToken(){
+  let t=sessionStorage.getItem("cst_admin_token");
+  if(!t){
+    t=prompt("請輸入管理密碼（只有你需要，訪客不會看到這個）：");
+    if(t)sessionStorage.setItem("cst_admin_token",t);
+  }
+  return t;
+}
+async function apiPost(path,body){
+  const token=getAdminToken();
+  if(!token)throw new Error("需要管理密碼");
+  const r=await fetch(`${API_BASE}${path}`,{
+    method:"POST",
+    headers:{"Content-Type":"application/json","X-Admin-Token":token},
+    body:JSON.stringify(body)
+  });
+  if(r.status===401){sessionStorage.removeItem("cst_admin_token");throw new Error("密碼錯誤");}
+  if(!r.ok)throw new Error(`寫入失敗（${r.status}）`);
+  return r.json();
+}
 
 // ── Supabase ─────────────────────────────────────────────
 async function sbGet(path){
@@ -396,19 +429,19 @@ function calcKD(h,lo,c,p=9,sk=3,sd=3){
   const da=[ka[0]];for(let i=1;i<ka.length;i++)da.push(ka[i]*dm+da[i-1]*(1-dm));
   return{k:+ka[ka.length-1].toFixed(1),d:+da[da.length-1].toFixed(1),pk:+ka[ka.length-2].toFixed(1),pd:+da[da.length-2].toFixed(1)};
 }
+/**
+ * ⚠️ 重要：前端不再自己判斷「有沒有訊號」。
+ *
+ * 舊版在這裡複製了一份 V1 的進場邏輯，結果有兩個問題：
+ *   1. 只複製了 V1，所以 Telegram 推播布林帶訊號時，網頁卡片還顯示「無信號」
+ *   2. 兩份邏輯會各自漂移，前端說的跟後端做的對不上
+ *
+ * 現在唯一的真相來源是後端寫進資料庫的訊號。
+ * 這個函式只負責顯示「指標現在在什麼位置」，不宣稱任何進出場建議。
+ */
 function buildSig(c,sym){
   if(!c||!c.rsi||!c.kd)return{s:"HOLD"};
-  const{rsi:r,kd:k,tr,price:p}=c;
-  const{sl:slPct,tp:tpPct}=getSLTP(sym||"");
-  const gx=k.pk<=k.pd&&k.k>k.d,dx=k.pk>=k.pd&&k.k<k.d;
-  if(gx&&k.k<30&&k.d<30&&r<40&&tr!=="BEAR")
-    return{s:"LONG",sl:+(p*(1-slPct)).toFixed(4),tp:+(p*(1+tpPct)).toFixed(4),slPct,tpPct,
-      reason:`KD金叉（K=${k.k} 穿越 D=${k.d}）\nRSI超賣 ${r}，反彈機率高`,type:"KD金叉反彈",
-      time:new Date().toLocaleString("zh-TW",{timeZone:"Asia/Taipei"})};
-  if(dx&&k.k>70&&k.d>70&&r>60&&tr!=="BULL")
-    return{s:"SHORT",sl:+(p*(1+slPct)).toFixed(4),tp:+(p*(1-tpPct)).toFixed(4),slPct,tpPct,
-      reason:`KD死叉（K=${k.k} 跌破 D=${k.d}）\nRSI超買 ${r}，回調風險高`,type:"KD死叉反壓",
-      time:new Date().toLocaleString("zh-TW",{timeZone:"Asia/Taipei"})};
+  const{rsi:r,kd:k}=c;
   if((k.k<35&&r<45)||(k.k>65&&r>55))return{s:"WATCH"};
   return{s:"HOLD"};
 }
@@ -477,17 +510,17 @@ function renderCard(sym){
 }
 
 // ── Render list ───────────────────────────────────────────
+const symsByDir=(dir)=>SYMS.filter(s=>openSignals.some(x=>x.symbol===s&&x.direction===dir));
+
 function renderList(containerId,filter){
-  const show=filter==="all"?SYMS
-    :filter==="long"?SYMS.filter(s=>{const o=openSignals.find(x=>x.symbol===s);return o?.direction==="LONG"||(!o&&buildSig(D[s]||{},s).s==="LONG");})
-    :SYMS.filter(s=>{const o=openSignals.find(x=>x.symbol===s);return o?.direction==="SHORT"||(!o&&buildSig(D[s]||{},s).s==="SHORT");});
+  const show=filter==="all"?SYMS:symsByDir(filter==="long"?"LONG":"SHORT");
   const el=document.getElementById(containerId);
-  if(el)el.innerHTML=show.map(renderCard).join("")||`<div class="empty-state">目前沒有符合條件的信號</div>`;
+  if(el)el.innerHTML=show.map(renderCard).join("")||`<div class="empty-state">目前沒有進行中的${filter==="long"?"做多":"做空"}訊號<br><span style="font-size:11px">訊號由後端系統發出，這裡只顯示實際推播過的</span></div>`;
 }
 
 function render(){
-  const longs=SYMS.filter(s=>{const o=openSignals.find(x=>x.symbol===s);return o?.direction==="LONG"||(!o&&buildSig(D[s]||{},s).s==="LONG");});
-  const shorts=SYMS.filter(s=>{const o=openSignals.find(x=>x.symbol===s);return o?.direction==="SHORT"||(!o&&buildSig(D[s]||{},s).s==="SHORT");});
+  const longs=symsByDir("LONG");
+  const shorts=symsByDir("SHORT");
   document.getElementById("cl").textContent=longs.length?`(${longs.length})`:"";
   document.getElementById("cs").textContent=shorts.length?`(${shorts.length})`:"";
   const bn=document.getElementById("banner");
@@ -502,11 +535,18 @@ function render(){
   renderList("coin-list","all");
   renderList("coin-list-long","long");
   renderList("coin-list-short","short");
-  document.getElementById("upd").textContent=new Date().toLocaleTimeString("zh-TW");
+  updateStatusBar();
 }
 
 // ── 網格相關 ──────────────────────────────────────────────
 async function loadGrids(){gridData=await sbGet("grids?select=*&order=created_at.desc")||[];}
+
+// 舊版只在「新增網格」之後才載入，所以打開頁面永遠是空的。這裡補上。
+async function onVersionChange(v){
+  currentVersion=v;
+  if(v==="網格策略"&&!gridData.length)await loadGrids();
+  renderPerf();
+}
 function showGridForm(){document.getElementById("grid-form").style.display="block";}
 function hideGridForm(){document.getElementById("grid-form").style.display="none";}
 async function manualClose(id){
@@ -514,14 +554,15 @@ async function manualClose(id){
   const exitPrice=prompt(`手動平倉｜${sig.symbol.replace("USDT","")}/USDT\n請輸入出場價格：`);
   if(!exitPrice||isNaN(parseFloat(exitPrice)))return;
   const entry=parseFloat(sig.entry_price),exit=parseFloat(exitPrice);
-  const pnlPct=sig.direction==="LONG"?+((exit-entry)/entry*100).toFixed(2):+((entry-exit)/entry*100).toFixed(2);
-  const result=pnlPct>=0?"WIN":"LOSS";
-  if(!window.confirm(`出場價：$${exit}\n損益：${pnlPct>=0?"+":""}${pnlPct}%\n確認平倉？`))return;
+  const gross=sig.direction==="LONG"?(exit-entry)/entry*100:(entry-exit)/entry*100;
+  const cost=sig.cost_pct!=null?parseFloat(sig.cost_pct):0.13;
+  const net=+(gross-cost).toFixed(2);
+  if(!window.confirm(`出場價：$${exit}\n毛損益：${gross>=0?"+":""}${gross.toFixed(2)}%\n扣成本 ${cost}% 後：${net>=0?"+":""}${net}%\n確認平倉？`))return;
   try{
-    await fetch(`${SUPABASE_URL}/rest/v1/signals?id=eq.${id}`,{method:"PATCH",headers:{"apikey":SUPABASE_KEY,"Authorization":`Bearer ${SUPABASE_KEY}`,"Content-Type":"application/json","Prefer":"return=minimal"},body:JSON.stringify({status:result,result,exit_price:exit,pnl_pct:pnlPct,actual_pnl:pnlPct,closed_at:new Date().toISOString()})});
+    await apiPost("/api/close-signal",{id,exit_price:exit});
     await loadSignals();render();renderPerf();
-    alert(`已記錄平倉！${pnlPct>=0?"+":""}${pnlPct}%`);
-  }catch(e){alert("平倉記錄失敗");}
+    alert(`已記錄平倉！${net>=0?"+":""}${net}%（已扣成本）`);
+  }catch(e){alert("平倉記錄失敗："+e.message);}
 }
 async function submitGrid(){
   const sym=(document.getElementById("gf-symbol").value||"").trim().toUpperCase();
@@ -535,16 +576,21 @@ async function submitGrid(){
   const notes=document.getElementById("gf-notes").value;
   if(!sym||!entry||!lower||!upper||!count||!invest||!start){alert("請填寫必要欄位");return;}
   try{
-    const res=await fetch(`${SUPABASE_URL}/rest/v1/grids`,{method:"POST",headers:{"apikey":SUPABASE_KEY,"Authorization":`Bearer ${SUPABASE_KEY}`,"Content-Type":"application/json","Prefer":"return=representation"},body:JSON.stringify({symbol:sym,entry_price:entry,lower_price:lower,upper_price:upper,grid_count:count,total_investment:invest,start_date:start,end_date:end||null,notes:notes||null,status:"RUNNING"})});
-    if(res.ok){hideGridForm();["gf-symbol","gf-entry","gf-lower","gf-upper","gf-count","gf-invest","gf-start","gf-end","gf-notes"].forEach(id=>{document.getElementById(id).value="";});await loadGrids();renderGridPerf();}
-    else alert("新增失敗，請重試");
-  }catch(e){alert("新增失敗");}
+    await apiPost("/api/grid",{symbol:sym,entry_price:entry,lower_price:lower,upper_price:upper,grid_count:count,total_investment:invest,start_date:start,end_date:end||null,notes:notes||null});
+    hideGridForm();
+    ["gf-symbol","gf-entry","gf-lower","gf-upper","gf-count","gf-invest","gf-start","gf-end","gf-notes"].forEach(id=>{document.getElementById(id).value="";});
+    await loadGrids();renderGridPerf();
+  }catch(e){alert("新增失敗："+e.message);}
 }
 async function updateGrid(id,field,value){
   const body={};
   if(field==="actual_pnl")body.actual_pnl=value===""?null:parseFloat(value);
   if(field==="status"){body.status=value;if(value==="WIN"||value==="LOSS")body.end_date=new Date().toISOString().split("T")[0];}
-  try{await fetch(`${SUPABASE_URL}/rest/v1/grids?id=eq.${id}`,{method:"PATCH",headers:{"apikey":SUPABASE_KEY,"Authorization":`Bearer ${SUPABASE_KEY}`,"Content-Type":"application/json","Prefer":"return=minimal"},body:JSON.stringify(body)});renderGridPerf();}catch(e){console.error(e);}
+  try{
+    await apiPost("/api/grid",{id,...body});
+    const g=gridData.find(x=>x.id===id); if(g)Object.assign(g,body);
+    renderGridPerf();
+  }catch(e){alert("更新失敗："+e.message);}
 }
 function renderGridPerf(){
   if(!document.getElementById("g-total"))return;
@@ -594,26 +640,14 @@ function renderGridPerf(){
 
 // ── Performance ───────────────────────────────────────────
 async function updateSignal(id, field, value){
+  const body={};
+  if(field==="entered") body.entered = value===""?null:value==="true";
+  if(field==="actual_pnl") body.actual_pnl = value===""?null:parseFloat(value);
   try{
-    const body={};
-    if(field==="entered") body.entered = value===""?null:value==="true";
-    if(field==="actual_pnl") body.actual_pnl = value===""?null:parseFloat(value);
-    await fetch(`${SUPABASE_URL}/rest/v1/signals?id=eq.${id}`,{
-      method:"PATCH",
-      headers:{
-        "apikey":SUPABASE_KEY,
-        "Authorization":`Bearer ${SUPABASE_KEY}`,
-        "Content-Type":"application/json",
-        "Prefer":"return=minimal"
-      },
-      body:JSON.stringify(body)
-    });
+    await apiPost("/api/update-signal",{id,...body});
     const sig=allSignals.find(s=>s.id===id);
-    if(sig){
-      if(field==="entered") sig.entered=body.entered;
-      if(field==="actual_pnl") sig.actual_pnl=body.actual_pnl;
-    }
-  }catch(e){console.error("更新失敗",e);}
+    if(sig)Object.assign(sig,body);
+  }catch(e){alert("更新失敗："+e.message);}
 }  
 function renderPerf(){
   // 版本說明
@@ -633,21 +667,30 @@ function renderPerf(){
   if(gs)gs.style.display=isGrid?"block":"none";
   if(isGrid){renderGridPerf();return;}
 
-  // 勝率統計用全部數據（依版本篩選）
-  const filtered=currentVersion==="全部"?allSignals
+  // 勝率統計（依版本篩選）
+  // 「全部」預設只算現行版本；舊版量測方式有偏差，要看得自己切過去
+  const filtered=currentVersion==="全部"
+    ?allSignals.filter(s=>!LEGACY_VERSIONS.has(s.version||"CryptoSignalTony舊策略")&&s.data_quality!=="duplicate")
     :currentVersion==="CryptoSignalTony舊策略"
       ?allSignals.filter(s=>!s.version||s.version==="CryptoSignalTony舊策略")
       :allSignals.filter(s=>s.version===currentVersion);
 
-  const closed=filtered.filter(s=>s.status!=="OPEN");
-  const wins=closed.filter(s=>s.result==="WIN");
-  const losses=closed.filter(s=>s.result==="LOSS");
-  const wr=closed.length?Math.round((wins.length/closed.length)*100):0;
-  document.getElementById("p-total").textContent=filtered.length;
-  document.getElementById("p-wr").textContent=closed.length?`${wr}%`:"—";
+  // 只有真正打到止盈/止損（或手動平倉）的才算進勝率；
+  // 時間出場與歸檔單另計，不然分母會被稀釋
+  const decided=filtered.filter(s=>["WIN","LOSS","MANUAL"].includes(s.status));
+  const wins=decided.filter(s=>s.result==="WIN");
+  const losses=decided.filter(s=>s.result==="LOSS");
+  const timeouts=filtered.filter(s=>s.status==="TIMEOUT");
+  const wr=decided.length?Math.round((wins.length/decided.length)*100):0;
+  document.getElementById("p-total").textContent=filtered.length+(timeouts.length?` (含${timeouts.length}筆時間出場)`:"");
+  document.getElementById("p-wr").textContent=decided.length?`${wr}%`:"—";
   document.getElementById("p-win").textContent=wins.length;
   document.getElementById("p-loss").textContent=losses.length;
-  document.getElementById("p-bar").style.width=closed.length?`${wr}%`:"0%";
+  document.getElementById("p-bar").style.width=decided.length?`${wr}%`:"0%";
+
+  // 樣本數不足時明講，不要讓人誤以為這個勝率有代表性
+  const wrEl=document.getElementById("p-wr");
+  if(wrEl)wrEl.title=decided.length<100?"樣本數不足 100 筆，這個數字還不具統計意義":"";
 
   // 累積盈虧
   const entered=filtered.filter(s=>s.entered===true&&s.actual_pnl!=null);
@@ -659,7 +702,8 @@ function renderPerf(){
   }
 
   // 歷史記錄只顯示近一週（依版本篩選）
-  const recentFiltered=currentVersion==="全部"?recentSignals
+  const recentFiltered=currentVersion==="全部"
+    ?recentSignals.filter(s=>!LEGACY_VERSIONS.has(s.version||"CryptoSignalTony舊策略")&&s.data_quality!=="duplicate")
     :currentVersion==="CryptoSignalTony舊策略"
       ?recentSignals.filter(s=>!s.version||s.version==="CryptoSignalTony舊策略")
       :recentSignals.filter(s=>s.version===currentVersion);
@@ -671,8 +715,15 @@ function renderPerf(){
           ?`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#28a870" stroke-width="2.5" stroke-linecap="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>`
           :`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#e04858" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>`;
         const dt=new Date(sig.created_at).toLocaleString("zh-TW",{timeZone:"Asia/Taipei",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"});
-        const rb=sig.status==="OPEN"?"OPEN":sig.result==="WIN"?"WIN":"LOSS";
-        const rl=sig.status==="OPEN"?"持倉中":sig.result==="WIN"?`+${sig.pnl_pct||""}%`:`${sig.pnl_pct||""}%`;
+        const pnlTxt=sig.pnl_pct!=null?`${sig.pnl_pct>=0?"+":""}${sig.pnl_pct}%`:"—";
+        const rb=sig.status==="OPEN"?"OPEN":sig.status==="TIMEOUT"?"OPEN":sig.result==="WIN"?"WIN":"LOSS";
+        const rl=sig.status==="OPEN"?"持倉中"
+          :sig.status==="TIMEOUT"?`⏱ ${pnlTxt}`
+          :sig.status==="ARCHIVED"?"已歸檔"
+          :sig.status==="MANUAL"?`手動 ${pnlTxt}`
+          :pnlTxt;
+        const rInfo=(sig.mfe_r!=null||sig.mae_r!=null)&&sig.status!=="OPEN"
+          ?`<div style="font-size:10px;color:var(--muted);width:100%;padding-left:38px">MFE ${(+sig.mfe_r||0).toFixed(2)}R · MAE ${(+sig.mae_r||0).toFixed(2)}R</div>`:"";
         const vBadge=sig.version?`<span style="font-size:9px;padding:1px 6px;border-radius:8px;background:rgba(0,0,0,.06);color:var(--muted)">${sig.version}</span>`:"";
         const manualBtn=sig.status==="OPEN"
           ?`<button onclick="manualClose(${sig.id})" style="font-size:11px;padding:3px 10px;border-radius:8px;border:1px solid var(--coral);background:rgba(224,96,80,.08);color:var(--coral);cursor:pointer;font-weight:600">手動平倉</button>`:"";
@@ -683,6 +734,7 @@ function renderPerf(){
             <div class="sig-row-price">進 $${fmt(sig.entry_price)}<br>損 $${fmt(sig.sl_price)}</div>
             <div style="display:flex;align-items:center;gap:6px"><span class="result-badge ${rb}">${rl}</span>${manualBtn}</div>
           </div>
+          ${rInfo}
           <div style="display:flex;gap:8px;width:100%;padding-left:38px;flex-wrap:wrap">
             <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--soft)">
               <span>是否進場</span>
@@ -741,25 +793,10 @@ function openP(sym){
       <div class='sc-reason'><strong>進場依據：</strong>${openSig.reason||''}</div>
       <div class='sc-meta'>${IC.clock} ${openDt}</div>
     </div>`;
-  } else if(sg.s==="LONG"||sg.s==="SHORT"){
-    const isLong=sg.s==="LONG";
-    const dirIcon=isLong?`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#28a870" stroke-width="2" stroke-linecap="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>`
-      :`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e04858" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>`;
-    sigHTML=`
-    <div class="sigcard ${sg.s}">
-      <div class="sc-head">${dirIcon}<span class="sc-title ${sg.s}">${isLong?"做多":"做空"} ｜ ${sym.replace("USDT","")}/USDT 永續</span></div>
-      <div class="sc-prices">
-        <div class="sc-pitem"><div class="sc-plbl">${IC.dot} 進場價</div><div class="sc-pval e" style="font-size:14px">$${fmt(c.price)}</div></div>
-        <div class="sc-pitem"><div class="sc-plbl" style="color:#e04858">${IC.x} 止損 -${sg.slPct?+(sg.slPct*100).toFixed(0):3}%</div><div class="sc-pval s">$${fmt(sg.sl)}</div></div>
-        <div class="sc-pitem"><div class="sc-plbl" style="color:#28a870">${IC.check} 止盈 +${sg.tpPct?+(sg.tpPct*100).toFixed(0):6}%</div><div class="sc-pval t">$${fmt(sg.tp)}</div></div>
-      </div>
-      <div class="sc-reason"><strong>進場依據：</strong><br>${sg.reason.replace(/\n/g,"<br>")}</div>
-      <div class="sc-meta">${IC.clock} ${sg.time||""} &nbsp;·&nbsp; ${IC.trend} ${sg.type} ｜ 1小時K ｜ 報酬比 1:2</div>
-    </div>`;
   } else {
     sigHTML=`<div style="background:rgba(0,0,0,.04);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:14px;text-align:center">
-      <div style="font-size:13px;color:var(--muted);margin-bottom:4px">${sg.s==="WATCH"?"觀望中":"目前無信號"}</div>
-      <div style="font-size:11px;color:var(--muted)">${sg.s==="WATCH"?"指標接近關鍵區間，持續觀察中":"尚未達到進場條件，等待KD金叉/死叉"}</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:4px">${sg.s==="WATCH"?"指標接近關鍵區間":"目前無進行中訊號"}</div>
+      <div style="font-size:11px;color:var(--muted)">訊號由後端系統掃描後推播，這裡不做即時判斷</div>
     </div>`;
   }
 
@@ -818,39 +855,75 @@ function setTab(tab,el){
 }
 
 // ── Load ─────────────────────────────────────────────────
-async function load(sym,i){
-  const[h1,dy,tk]=await Promise.all([bk(sym,"60",500),bk(sym,"D",50),bt(sym)]);
-  if(!h1||!dy||!tk)return;
+// RSI(14) / KD(9) 根本用不到 500 根 K 線。150 根綽綽有餘，傳輸量少七成。
+const KLINE_BARS=150;
+let loadedCount=0,failedSyms=new Set();
+
+async function load(sym){
+  const[h1,dy,tk]=await Promise.all([bk(sym,"60",KLINE_BARS),bk(sym,"D",60),bt(sym)]);
+  if(!h1||!dy||!tk){failedSyms.add(sym);return false;}
+  failedSyms.delete(sym);
   const dm13=ma(dy.c,13),dm34=ma(dy.c,34);
   D[sym]={price:tk.p,change24h:tk.ch,rsi:calcRSI(h1.c),kd:calcKD(h1.h,h1.lo,h1.c),
-    tr:dm13&&dm34?(dm13>dm34*1.02?"BULL":dm13<dm34*0.98?"BEAR":"NEUTRAL"):"NEUTRAL"};
-  document.getElementById("load-n").textContent=`${i+1} / ${SYMS.length}`;
-  document.getElementById("pgfill").style.width=`${((i+1)/SYMS.length)*100}%`;
+    tr:dm13&&dm34?(dm13>dm34*1.02?"BULL":dm13<dm34*0.98?"BEAR":"NEUTRAL"):"NEUTRAL",
+    updatedAt:Date.now()};
+  return true;
+}
+
+// 分批平行載入，而且每一批回來就先畫，不用等 23 個全部好
+async function loadAll(showProgress){
+  const BATCH=5;
+  loadedCount=0;
+  for(let i=0;i<SYMS.length;i+=BATCH){
+    const batch=SYMS.slice(i,i+BATCH);
+    await Promise.all(batch.map(s=>load(s)));
+    loadedCount=Math.min(SYMS.length,i+BATCH);
+    if(showProgress){
+      const n=document.getElementById("load-n");
+      const f=document.getElementById("pgfill");
+      if(n)n.textContent=`${loadedCount} / ${SYMS.length}`;
+      if(f)f.style.width=`${(loadedCount/SYMS.length)*100}%`;
+    }
+    if(loaded)render();
+    await new Promise(r=>setTimeout(r,100));
+  }
+  updateStatusBar();
+}
+
+// 舊版資料抓失敗時整張卡永遠停在「…」，看不出是載入中還是壞了
+function updateStatusBar(){
+  const el=document.getElementById("upd");
+  if(!el)return;
+  const t=new Date().toLocaleTimeString("zh-TW");
+  if(failedSyms.size){
+    el.innerHTML=`<span style="color:#e04858">⚠ ${failedSyms.size} 個幣種更新失敗</span> · 上次成功 ${t}`;
+  }else{
+    el.textContent=t;
+  }
 }
 
 async function init(){
   document.getElementById("pgwrap").style.display="block";
   await loadSignals();
-  for(let i=0;i<SYMS.length;i++){
-    await load(SYMS[i],i);
-    if(i%4===3)await new Promise(r=>setTimeout(r,80));
-  }
+  await loadGrids();
+  await loadAll(true);
   document.getElementById("pgwrap").style.display="none";
   document.getElementById("loading").style.display="none";
   document.getElementById("page-market").style.display="block";
   loaded=true;render();
+
+  // 價格：30 秒
   setInterval(async()=>{
     await Promise.all(SYMS.map(async s=>{const t=await bt(s);if(t&&D[s]){D[s].price=t.p;D[s].change24h=t.ch;}}));
     render();
   },30000);
+  // 訊號：5 分鐘
   setInterval(async()=>{
     await loadSignals();render();
     if(currentTab==="perf")renderPerf();
   },5*60*1000);
-  setInterval(async()=>{
-    for(let i=0;i<SYMS.length;i++){await load(SYMS[i],i);await new Promise(r=>setTimeout(r,180));}
-    render();
-  },15*60*1000);
+  // 指標：15 分鐘
+  setInterval(()=>loadAll(false),15*60*1000);
 }
 init();
 </script>
