@@ -200,7 +200,16 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 <div id="hdr">
   <div class="hdr-row">
     <div id="logo">CryptoSignal ✦<br><span style="font-size:11px;font-weight:500;letter-spacing:.2px;background:linear-gradient(135deg,#e06050,#c8506a);-webkit-background-clip:text;-webkit-text-fill-color:transparent">by Tony Chang · @blackheartcat1115</span></div>
-    <div id="upd">載入中…</div>
+    <a href="./momentum.html" style="display:flex;align-items:center;justify-content:space-between;
+     text-decoration:none;background:linear-gradient(135deg,#e06050,#c8506a);color:#fff;
+     border-radius:14px;padding:13px 16px;margin:0 0 14px;box-shadow:0 2px 10px rgba(224,96,80,.22)">
+    <span>
+      <b style="font-size:14px">📊 動量多空策略</b>
+      <span style="display:block;font-size:11px;opacity:.85;margin-top:2px">每週換倉 ｜ 動量排行榜 ｜ 持倉追蹤</span>
+    </span>
+    <span style="font-size:18px">→</span>
+  </a>
+  <div id="upd">載入中…</div>
   </div>
   <div class="tabs">
     <button class="tab on"  onclick="setTab('market',this)">市場</button>
@@ -337,7 +346,7 @@ const getSLTP=(sym)=>BIG_COINS.has(sym)?{sl:0.02,tp:0.04}:{sl:0.03,tp:0.06};
 const SUPABASE_URL="https://blivdibgijnpoeumfloe.supabase.co";
 const SUPABASE_KEY="sb_publishable_TVMXh4lriOqg4PVOhJ6KQw_drQ1FjcJ";
 // ⚠️ 改成你的 Railway 網址。所有寫入都走這裡，資料庫本身只開放讀取。
-const API_BASE="https://cryptosignal-backend-production.up.railway.app";
+const API_BASE="https://your-app.up.railway.app";
 
 const VERSIONS={
   "全部":{date:"",desc:""},
