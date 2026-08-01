@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<title>動量策略｜CryptoSignal Tony</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=Dancing+Script:wght@600;700&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#fdf7f2;--card:#ffffff;--border:rgba(200,168,148,0.18);
+  --text:#221a16;--soft:#8a6e62;--muted:#c4a898;
+  --coral:#e06050;--rose:#c8506a;
+  --long:#28a870;--short:#e04858;--watch:#d4903a;
+  --ds:'Dancing Script',cursive;
+  --mono:'DM Mono',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:80px}
+.wrap{max-width:720px;margin:0 auto;padding:0 16px}
+
+/* ── header ── */
+header{padding:18px 0 12px;display:flex;align-items:center;justify-content:space-between}
+.logo{font-family:var(--ds);font-size:26px;color:var(--coral);line-height:1}
+.logo small{display:block;font-family:'DM Sans';font-size:10px;color:var(--muted);letter-spacing:1.5px;margin-top:2px}
+.back{font-size:12px;color:var(--soft);text-decoration:none;border:1px solid var(--border);
+  padding:6px 12px;border-radius:20px;background:var(--card)}
+#upd{font-size:11px;color:var(--muted);font-family:var(--mono);text-align:right;padding:2px 0 10px}
+
+/* ── tabs ── */
+.tabs{display:flex;gap:6px;margin-bottom:16px;overflow-x:auto;padding-bottom:2px}
+.tab{flex-shrink:0;padding:8px 16px;border-radius:20px;font-size:13px;font-weight:600;
+  border:1px solid var(--border);background:var(--card);color:var(--soft);cursor:pointer;white-space:nowrap}
+.tab.on{background:var(--coral);color:#fff;border-color:var(--coral)}
+
+/* ── cards ── */
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:12px}
+.card h3{font-size:13px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.hint{font-size:11px;color:var(--muted);line-height:1.6;margin-top:8px}
+
+/* ── stat grid ── */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px 8px;text-align:center}
+.stat .v{font-family:var(--mono);font-size:17px;font-weight:500}
+.stat .l{font-size:9px;color:var(--muted);margin-top:3px;letter-spacing:.3px}
+
+/* ── list rows ── */
+.row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.row:last-child{border-bottom:none}
+.rk{width:26px;font-family:var(--mono);font-size:12px;color:var(--muted);flex-shrink:0;text-align:right}
+.sym{font-weight:700;font-size:14px;min-width:66px}
+.grow{flex:1;min-width:0}
+.mono{font-family:var(--mono);font-size:12px}
+.pos{color:var(--long)}.neg{color:var(--short)}
+.sub{font-size:10px;color:var(--muted);margin-top:2px}
+
+.pill{font-size:9px;padding:2px 7px;border-radius:8px;font-weight:700;flex-shrink:0}
+.p-long{background:rgba(40,168,112,.12);color:var(--long)}
+.p-short{background:rgba(224,72,88,.12);color:var(--short)}
+.p-open{background:rgba(212,144,58,.14);color:var(--watch)}
+
+/* ── action buttons ── */
+.acts{display:flex;gap:5px;flex-shrink:0}
+.act{font-size:10px;padding:5px 9px;border-radius:8px;border:1px solid var(--border);
+  background:var(--card);color:var(--soft);cursor:pointer;font-weight:600}
+.act.on-done{background:var(--long);color:#fff;border-color:var(--long)}
+.act.on-skip{background:var(--muted);color:#fff;border-color:var(--muted)}
+
+.empty{text-align:center;padding:36px 16px;color:var(--muted);font-size:13px;line-height:1.8}
+.warn{background:rgba(212,144,58,.09);border:1px solid rgba(212,144,58,.25);
+  border-radius:12px;padding:11px 13px;font-size:11px;color:#8a6a30;line-height:1.7;margin-bottom:12px}
+.bar{height:4px;border-radius:3px;background:rgba(200,168,148,.16);overflow:hidden;margin-top:4px}
+.bar i{display:block;height:100%;background:var(--coral);border-radius:3px}
+.page{display:none}.page.on{display:block}
+.load{text-align:center;padding:50px 0;color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="logo">CryptoSignal Tony<small>MOMENTUM STRATEGY</small></div>
+  <a class="back" href="./index.html">← 舊策略</a>
+</header>
+<div id="upd">載入中…</div>
+
+<div class="warn">
+  ⚠️ <b>動量策略目前處於驗證期</b><br/>
+  回測結果為樣本內數據，尚未經過真實市場檢驗。系統只記錄與推播，不代表投資建議。
+</div>
+
+<div class="tabs">
+  <div class="tab on" data-p="hold">本週持倉</div>
+  <div class="tab" data-p="rank">動量排行</div>
+  <div class="tab" data-p="weak">弱勢觀察</div>
+  <div class="tab" data-p="perf">績效</div>
+</div>
+
+<!-- ══ 本週持倉 ══ -->
+<div class="page on" id="p-hold">
+  <div class="card">
+    <h3>💰 資金配置</h3>
+    <div class="row" style="border:none;padding:4px 0">
+      <div class="grow"><div class="mono" id="cap-total">—</div><div class="sub">實際部位（本金 × 曝險）</div></div>
+      <div style="text-align:right"><div class="mono" id="cap-n">—</div><div class="sub">多單檔數</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>📌 做多持倉<span style="font-size:10px;color:var(--muted);font-weight:400">（你實際操作的）</span></h3>
+    <div id="hold-long"><div class="load">載入中…</div></div>
+    <div class="hint">
+      👉 每次換倉後，請點「做了」或「跳過」。<br/>
+      這份紀錄是用來回答：<b>你的人工判斷是加分還是減分</b>。半年後才有答案，但現在不記就永遠沒有。
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>📉 空單持倉<span style="font-size:10px;color:var(--muted);font-weight:400">（系統紀錄，你不操作）</span></h3>
+    <div id="hold-short"><div class="load">載入中…</div></div>
+    <div class="hint">空單設有 −30% 止損，觸發時 Telegram 會通知。這半邊只是為了讓策略紀錄完整。</div>
+  </div>
+</div>
+
+<!-- ══ 動量排行 ══ -->
+<div class="page" id="p-rank">
+  <div class="card">
+    <h3>🔥 動量排行 Top 20</h3>
+    <div id="rank-list"><div class="load">載入中…</div></div>
+    <div class="hint">依過去 30 天報酬排序，每日更新。<b>這是觀察，不是進場建議。</b></div>
+  </div>
+</div>
+
+<!-- ══ 弱勢觀察 ══ -->
+<div class="page" id="p-weak">
+  <div class="card">
+    <h3>❄️ 弱勢觀察 Bottom 20</h3>
+    <div id="weak-list"><div class="load">載入中…</div></div>
+    <div class="hint">過去 30 天最弱的 20 檔。呈現市場結構用，<b>不是做空建議</b>。</div>
+  </div>
+</div>
+
+<!-- ══ 績效 ══ -->
+<div class="page" id="p-perf">
+  <div class="stats">
+    <div class="stat"><div class="v" id="s-n">—</div><div class="l">已平倉</div></div>
+    <div class="stat"><div class="v" id="s-wr">—</div><div class="l">勝率</div></div>
+    <div class="stat"><div class="v" id="s-exp">—</div><div class="l">每筆期望</div></div>
+    <div class="stat"><div class="v" id="s-days">—</div><div class="l">平均持有</div></div>
+  </div>
+
+  <div class="card">
+    <h3>🧠 人工判斷 vs 系統</h3>
+    <div id="judge"><div class="load">資料累積中…</div></div>
+    <div class="hint">
+      這是整個系統最重要的一張表。<br/>
+      「我有做」平均損益 &gt; 「我跳過」→ 你的判斷有價值。<br/>
+      兩者差不多 → 照系統做就好，省時間。<br/>
+      <b>⚠️ 少於 50 筆時，差異多半是運氣，別急著下結論。</b>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>📜 已平倉紀錄</h3>
+    <div id="closed"><div class="load">載入中…</div></div>
+  </div>
+</div>
+
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+const SUPABASE_URL="https://blivdibgijnpoeumfloe.supabase.co";
+const SUPABASE_KEY="sb_publishable_TVMXh4lriOqg4PVOhJ6KQw_drQ1FjcJ";
+// ⚠️ 換成你的 Railway 網址
+const API_BASE="https://cryptosignal-backend-production.up.railway.app";
+
+const CAPITAL_TWD=30000, EXPOSURE=0.30;
+
+let positions=[], rankings=[], closed=[];
+
+// ── 讀取（只讀，寫入一律走後端）──
+async function sbGet(q){
+  try{
+    const r=await fetch(`${SUPABASE_URL}/rest/v1/${q}`,
+      {headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`}});
+    return r.ok? await r.json() : null;
+  }catch(e){ return null; }
+}
+
+function getToken(){
+  let t=sessionStorage.getItem("cst_admin_token");
+  if(!t){ t=prompt("請輸入管理密碼："); if(t)sessionStorage.setItem("cst_admin_token",t); }
+  return t;
+}
+async function apiPost(path,body){
+  const t=getToken(); if(!t) throw new Error("需要密碼");
+  const r=await fetch(API_BASE+path,{method:"POST",
+    headers:{"Content-Type":"application/json","X-Admin-Token":t},body:JSON.stringify(body)});
+  if(r.status===401){ sessionStorage.removeItem("cst_admin_token"); throw new Error("密碼錯誤"); }
+  if(!r.ok) throw new Error("寫入失敗 "+r.status);
+  return r.json();
+}
+
+// ── 格式 ──
+const nm=s=>s.replace("USDT","");
+const px=n=>{ if(n==null)return"—"; const a=Math.abs(n);
+  return a<0.001?(+n).toFixed(6):a<1?(+n).toFixed(4):a<100?(+n).toFixed(3):(+n).toLocaleString("en-US",{maximumFractionDigits:2}); };
+const sign=n=>(n>=0?"+":"")+(+n).toFixed(2);
+const cls=n=>n>=0?"pos":"neg";
+const daysBetween=(a,b)=>Math.max(0,Math.round((new Date(b||Date.now())-new Date(a))/86400000));
+
+// ══════════════════════════════════════════════════════════
+async function load(){
+  const [pos, rank] = await Promise.all([
+    sbGet("momentum_positions?select=*&order=rank.asc&limit=500"),
+    sbGet("momentum_rankings?select=*&order=snapshot_at.desc,rank.asc&limit=300"),
+  ]);
+  positions = pos || [];
+  closed = positions.filter(p=>p.status==="CLOSED");
+
+  // 只取最新一次快照
+  if(rank && rank.length){
+    const latest = rank[0].snapshot_at;
+    rankings = rank.filter(r=>r.snapshot_at===latest);
+  } else rankings = [];
+
+  document.getElementById("upd").textContent =
+    "更新於 " + new Date().toLocaleString("zh-TW",{timeZone:"Asia/Taipei"});
+  render();
+}
+
+function render(){ renderHold(); renderRank(); renderPerf(); }
+
+// ── 持倉 ──
+function renderHold(){
+  const open = positions.filter(p=>p.status==="OPEN");
+  const longs = open.filter(p=>p.direction==="LONG").sort((a,b)=>a.rank-b.rank);
+  const shorts= open.filter(p=>p.direction==="SHORT").sort((a,b)=>a.rank-b.rank);
+
+  const total = CAPITAL_TWD*EXPOSURE;
+  document.getElementById("cap-total").textContent = "NT$ "+total.toLocaleString();
+  document.getElementById("cap-n").textContent = longs.length+" 檔";
+
+  const el=document.getElementById("hold-long");
+  if(!longs.length){ el.innerHTML=`<div class="empty">尚無持倉<br/><span style="font-size:11px">每週一 20:00 換倉後會出現</span></div>`; }
+  else el.innerHTML = longs.map(p=>{
+    const a=p.user_action;
+    return `<div class="row">
+      <div class="rk">#${p.rank||"—"}</div>
+      <div class="grow">
+        <div style="display:flex;align-items:center;gap:6px">
+          <span class="sym">${nm(p.symbol)}</span>
+          <span class="mono" style="color:var(--soft)">NT$${(p.user_amount_twd||0).toLocaleString()}</span>
+        </div>
+        <div class="sub">權重 ${p.user_weight||"—"}% ｜ 30日 ${sign(p.momentum_30d)}% ｜ 進場 $${px(p.entry_price)} ｜ ${daysBetween(p.entry_at)} 天</div>
+        <div class="bar"><i style="width:${Math.min(100,(p.user_weight||0)*5)}%"></i></div>
+      </div>
+      <div class="acts">
+        <div class="act ${a==="DONE"?"on-done":""}" onclick="mark(${p.id},'DONE')">做了</div>
+        <div class="act ${a==="SKIPPED"?"on-skip":""}" onclick="mark(${p.id},'SKIPPED')">跳過</div>
+      </div>
+    </div>`;
+  }).join("");
+
+  const el2=document.getElementById("hold-short");
+  if(!shorts.length){ el2.innerHTML=`<div class="empty">尚無空單紀錄</div>`; }
+  else el2.innerHTML = shorts.map(p=>`<div class="row">
+      <div class="rk">#${p.rank||"—"}</div>
+      <div class="grow">
+        <span class="sym">${nm(p.symbol)}</span>
+        <div class="sub">30日 ${sign(p.momentum_30d)}% ｜ 進場 $${px(p.entry_price)} ｜ ${daysBetween(p.entry_at)} 天</div>
+      </div>
+      <span class="pill p-short">空</span>
+    </div>`).join("");
+}
+
+async function mark(id, action){
+  const p=positions.find(x=>x.id===id); if(!p) return;
+  const next = p.user_action===action ? null : action;   // 再點一次取消
+  try{
+    await apiPost("/api/momentum/user-action",{id,user_action:next});
+    p.user_action=next; renderHold();
+  }catch(e){ alert("記錄失敗："+e.message); }
+}
+
+// ── 排行榜 ──
+function renderRank(){
+  const rowHtml=(r)=>`<div class="row">
+      <div class="rk">${r.rank}</div>
+      <div class="grow">
+        <span class="sym">${nm(r.symbol)}</span>
+        <span class="mono ${cls(r.momentum_30d)}" style="margin-left:6px">${sign(r.momentum_30d)}%</span>
+        <div class="sub">現價 $${px(r.price)} ｜ 日波動 ${(+r.volatility_30d).toFixed(1)}%</div>
+      </div>
+    </div>`;
+
+  const top=rankings.slice(0,20);
+  const bottom=rankings.slice(-20).reverse();
+  document.getElementById("rank-list").innerHTML =
+    top.length? top.map(rowHtml).join("")
+    : `<div class="empty">尚無排行榜資料<br/><span style="font-size:11px">系統每日 08:00（台灣）更新</span></div>`;
+  document.getElementById("weak-list").innerHTML =
+    bottom.length? bottom.map(rowHtml).join("") : `<div class="empty">尚無資料</div>`;
+}
+
+// ── 績效 ──
+function renderPerf(){
+  const c=closed;
+  if(c.length){
+    const w=c.filter(p=>p.pnl_pct>0).length;
+    const exp=c.reduce((a,p)=>a+(+p.pnl_pct||0),0)/c.length;
+    const dd=c.reduce((a,p)=>a+daysBetween(p.entry_at,p.exit_at),0)/c.length;
+    document.getElementById("s-n").textContent=c.length;
+    document.getElementById("s-wr").textContent=Math.round(100*w/c.length)+"%";
+    document.getElementById("s-exp").textContent=sign(exp)+"%";
+    document.getElementById("s-days").textContent=dd.toFixed(0)+"天";
+  }
+
+  // 人工判斷對照
+  const longsClosed=c.filter(p=>p.direction==="LONG");
+  const grp={DONE:[],SKIPPED:[],NONE:[]};
+  longsClosed.forEach(p=>grp[p.user_action||"NONE"].push(p));
+  const label={DONE:"✅ 我有做",SKIPPED:"⏭️ 我跳過",NONE:"◽ 沒標記"};
+  const rows=Object.entries(grp).filter(([,v])=>v.length).map(([k,v])=>{
+    const w=v.filter(p=>p.pnl_pct>0).length;
+    const avg=v.reduce((a,p)=>a+(+p.pnl_pct||0),0)/v.length;
+    return `<div class="row">
+      <div class="grow"><b style="font-size:13px">${label[k]}</b>
+        <div class="sub">${v.length} 筆 ｜ 勝率 ${Math.round(100*w/v.length)}%</div></div>
+      <div style="text-align:right"><div class="mono ${cls(avg)}" style="font-size:15px">${sign(avg)}%</div>
+        <div class="sub">平均損益</div></div>
+    </div>`;
+  }).join("");
+  document.getElementById("judge").innerHTML = rows ||
+    `<div class="empty">資料累積中<br/><span style="font-size:11px">需要平倉紀錄才能比較</span></div>`;
+
+  // 已平倉
+  const el=document.getElementById("closed");
+  const list=c.slice().sort((a,b)=>new Date(b.exit_at)-new Date(a.exit_at)).slice(0,40);
+  el.innerHTML = list.length? list.map(p=>`<div class="row">
+      <div class="grow">
+        <span class="sym">${nm(p.symbol)}</span>
+        <span class="pill ${p.direction==="LONG"?"p-long":"p-short"}" style="margin-left:5px">${p.direction==="LONG"?"多":"空"}</span>
+        ${p.exit_reason==="STOP"?'<span class="pill p-open" style="margin-left:4px">止損</span>':""}
+        ${p.user_action==="DONE"?'<span class="pill p-long" style="margin-left:4px">我做了</span>':""}
+        ${p.user_action==="SKIPPED"?'<span class="pill p-open" style="margin-left:4px">我跳過</span>':""}
+        <div class="sub">$${px(p.entry_price)} → $${px(p.exit_price)} ｜ ${daysBetween(p.entry_at,p.exit_at)} 天</div>
+      </div>
+      <div class="mono ${cls(p.pnl_pct)}" style="font-size:14px">${sign(p.pnl_pct)}%</div>
+    </div>`).join("") : `<div class="empty">尚無平倉紀錄</div>`;
+}
+
+// ── tabs ──
+document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
+  document.querySelectorAll(".tab").forEach(x=>x.classList.remove("on"));
+  document.querySelectorAll(".page").forEach(x=>x.classList.remove("on"));
+  t.classList.add("on");
+  document.getElementById("p-"+t.dataset.p).classList.add("on");
+});
+
+load();
+setInterval(load, 5*60*1000);
+</script>
+</body>
+</html>
