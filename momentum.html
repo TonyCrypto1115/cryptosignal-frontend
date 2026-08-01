@@ -177,8 +177,9 @@ const SUPABASE_KEY="sb_publishable_TVMXh4lriOqg4PVOhJ6KQw_drQ1FjcJ";
 const API_BASE="https://cryptosignal-backend-production.up.railway.app";
 
 const CAPITAL_TWD=30000, EXPOSURE=0.30;
+const USD_TWD=32.5;   // 匯率，換算 USDT 用
 
-let positions=[], rankings=[], closed=[];
+let positions=[], rankings=[], closed=[], priceMap={}, specMap={};
 
 // ── 讀取（只讀，寫入一律走後端）──
 async function sbGet(q){
@@ -187,6 +188,40 @@ async function sbGet(q){
       {headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`}});
     return r.ok? await r.json() : null;
   }catch(e){ return null; }
+}
+
+// 一次抓回所有幣的即時價格（Bybit 這支 API 會回傳全部，只需要一次呼叫）
+async function loadTickers(){
+  try{
+    const r=await fetch("https://api.bybit.com/v5/market/tickers?category=linear");
+    const j=await r.json();
+    if(j.retCode!==0) return;
+    priceMap={};
+    j.result.list.forEach(t=>priceMap[t.symbol]=parseFloat(t.lastPrice));
+  }catch(e){}
+}
+
+// 抓每個幣的下單規格：最小下單量、數量級距
+// 這很重要 —— 光看金額不夠，有些幣一張合約就要好幾十 USDT
+async function loadSpecs(){
+  try{
+    const r=await fetch("https://api.bybit.com/v5/market/instruments-info?category=linear&limit=1000");
+    const j=await r.json();
+    if(j.retCode!==0) return;
+    specMap={};
+    j.result.list.forEach(t=>{
+      const f=t.lotSizeFilter||{};
+      specMap[t.symbol]={ minQty:parseFloat(f.minOrderQty)||0, step:f.qtyStep||"1" };
+    });
+  }catch(e){}
+}
+
+// 依照級距把數量無條件捨去（下單量不能超過你算出來的金額）
+function roundQty(q, step){
+  const s=parseFloat(step);
+  if(!s||s<=0) return q;
+  const dec=(String(step).split(".")[1]||"").length;
+  return (Math.floor(q/s)*s).toFixed(dec);
 }
 
 function getToken(){
@@ -216,6 +251,8 @@ async function load(){
   const [pos, rank] = await Promise.all([
     sbGet("momentum_positions?select=*&order=rank.asc&limit=500"),
     sbGet("momentum_rankings?select=*&order=snapshot_at.desc,rank.asc&limit=300"),
+    loadTickers(),
+    loadSpecs(),
   ]);
   positions = pos || [];
   closed = positions.filter(p=>p.status==="CLOSED");
@@ -240,21 +277,46 @@ function renderHold(){
   const shorts= open.filter(p=>p.direction==="SHORT").sort((a,b)=>a.rank-b.rank);
 
   const total = CAPITAL_TWD*EXPOSURE;
-  document.getElementById("cap-total").textContent = "NT$ "+total.toLocaleString();
+  document.getElementById("cap-total").textContent =
+    (total/USD_TWD).toFixed(0)+" USDT  (NT$"+total.toLocaleString()+")";
   document.getElementById("cap-n").textContent = longs.length+" 檔";
 
   const el=document.getElementById("hold-long");
   if(!longs.length){ el.innerHTML=`<div class="empty">尚無持倉<br/><span style="font-size:11px">每週一 20:00 換倉後會出現</span></div>`; }
   else el.innerHTML = longs.map(p=>{
     const a=p.user_action;
+    const twd=p.user_amount_twd||0;
+    const usdt=twd/USD_TWD;
+    const now=priceMap[p.symbol];
+    const ref=now||p.entry_price;            // 有即時價就用即時價算數量
+    const spec=specMap[p.symbol];
+    let qtyTxt="", warn="";
+    if(ref&&ref>0){
+      const raw=usdt/ref;
+      if(spec){
+        const q=roundQty(raw, spec.step);
+        if(parseFloat(q)<spec.minQty || parseFloat(q)<=0){
+          warn=`⚠️ 低於最小下單量（最少 ${spec.minQty} ${nm(p.symbol)}，約 ${(spec.minQty*ref).toFixed(1)}U）`;
+        } else qtyTxt=`${q} ${nm(p.symbol)}`;
+      } else qtyTxt=`${raw.toFixed(4)} ${nm(p.symbol)}`;
+    }
+    // 進場後的即時損益
+    let pnl="";
+    if(now&&p.entry_price>0){
+      const v=(now/p.entry_price-1)*100;
+      pnl=`<span class="mono ${cls(v)}" style="margin-left:6px">${sign(v)}%</span>`;
+    }
     return `<div class="row">
       <div class="rk">#${p.rank||"—"}</div>
       <div class="grow">
-        <div style="display:flex;align-items:center;gap:6px">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
           <span class="sym">${nm(p.symbol)}</span>
-          <span class="mono" style="color:var(--soft)">NT$${(p.user_amount_twd||0).toLocaleString()}</span>
+          <span class="mono" style="color:var(--coral);font-weight:600">${usdt.toFixed(1)} USDT</span>
+          ${pnl}
         </div>
-        <div class="sub">權重 ${p.user_weight||"—"}% ｜ 30日 ${sign(p.momentum_30d)}% ｜ 進場 $${px(p.entry_price)} ｜ ${daysBetween(p.entry_at)} 天</div>
+        ${qtyTxt?`<div class="mono" style="font-size:12px;color:var(--text);margin-top:3px">👉 下單 <b>${qtyTxt}</b></div>`:""}
+        ${warn?`<div style="font-size:11px;color:var(--watch);margin-top:3px">${warn}</div>`:""}
+        <div class="sub">權重 ${p.user_weight||"—"}%（NT$${twd.toLocaleString()}）｜ 30日 ${sign(p.momentum_30d)}% ｜ 現價 $${px(now||p.entry_price)} ｜ ${daysBetween(p.entry_at)} 天</div>
         <div class="bar"><i style="width:${Math.min(100,(p.user_weight||0)*5)}%"></i></div>
       </div>
       <div class="acts">
