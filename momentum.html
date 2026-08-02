@@ -66,6 +66,10 @@ header{padding:18px 0 12px;display:flex;align-items:center;justify-content:space
   background:var(--card);color:var(--soft);cursor:pointer;font-weight:600}
 .act.on-done{background:var(--long);color:#fff;border-color:var(--long)}
 .act.on-skip{background:var(--muted);color:#fff;border-color:var(--muted)}
+.act.on-na{background:var(--rose);color:#fff;border-color:var(--rose)}
+.acts2{display:flex;flex-wrap:wrap;gap:4px;flex-shrink:0;max-width:150px;justify-content:flex-end}
+.chip{display:inline-block;font-size:12px;padding:5px 11px;margin:0 5px 5px 0;border-radius:14px;
+  background:var(--card);border:1px solid var(--border);cursor:pointer}
 
 .empty{text-align:center;padding:36px 16px;color:var(--muted);font-size:13px;line-height:1.8}
 .warn{background:rgba(212,144,58,.09);border:1px solid rgba(212,144,58,.25);
@@ -117,6 +121,16 @@ header{padding:18px 0 12px;display:flex;align-items:center;justify-content:space
   </div>
 
   <div class="card">
+    <h3>🚫 排除清單<span style="font-size:10px;color:var(--muted);font-weight:400">（不參與排名）</span></h3>
+    <div id="excl"></div>
+    <div class="hint">
+      標記「沒上架」的幣會自動進到這裡，<b>之後連排名都不參與</b>。<br/>
+      這樣「前 20%」才會是你真正做得到的前 20%，而不是先排完名再跳過。<br/>
+      點一下可以移除。
+    </div>
+  </div>
+
+  <div class="card">
     <h3>📉 空單持倉<span style="font-size:10px;color:var(--muted);font-weight:400">（系統紀錄，你不操作）</span></h3>
     <div id="hold-short"><div class="load">載入中…</div></div>
     <div class="hint">空單設有 −30% 止損，觸發時 Telegram 會通知。這半邊只是為了讓策略紀錄完整。</div>
@@ -155,8 +169,8 @@ header{padding:18px 0 12px;display:flex;align-items:center;justify-content:space
     <div id="judge"><div class="load">資料累積中…</div></div>
     <div class="hint">
       這是整個系統最重要的一張表。<br/>
-      「我有做」平均損益 &gt; 「我跳過」→ 你的判斷有價值。<br/>
-      兩者差不多 → 照系統做就好，省時間。<br/>
+      要比的是 <b>「我有做」vs「我判斷不做」</b> 這兩組。<br/>
+      「沒上架」「金額太小」是平台限制，不算你的判斷，要分開看。<br/>
       <b>⚠️ 少於 50 筆時，差異多半是運氣，別急著下結論。</b>
     </div>
   </div>
@@ -179,7 +193,7 @@ const API_BASE="https://cryptosignal-backend-production.up.railway.app";
 const CAPITAL_TWD=30000, EXPOSURE=0.30;
 const USD_TWD=32.5;   // 匯率，換算 USDT 用
 
-let positions=[], rankings=[], closed=[], priceMap={}, specMap={};
+let positions=[], rankings=[], closed=[], priceMap={}, specMap={}, fundMap={}, exclusions=[];
 
 // ── 讀取（只讀，寫入一律走後端）──
 async function sbGet(q){
@@ -196,8 +210,12 @@ async function loadTickers(){
     const r=await fetch("https://api.bybit.com/v5/market/tickers?category=linear");
     const j=await r.json();
     if(j.retCode!==0) return;
-    priceMap={};
-    j.result.list.forEach(t=>priceMap[t.symbol]=parseFloat(t.lastPrice));
+    priceMap={}; fundMap={};
+    j.result.list.forEach(t=>{
+      priceMap[t.symbol]=parseFloat(t.lastPrice);
+      // 資金費率每 8 小時結算一次，持有 19 天要付 57 次 —— 長抱時這是主要成本
+      fundMap[t.symbol]=parseFloat(t.fundingRate);
+    });
   }catch(e){}
 }
 
@@ -254,6 +272,7 @@ async function load(){
     loadTickers(),
     loadSpecs(),
   ]);
+  exclusions = (await sbGet("momentum_exclusions?select=*&order=symbol.asc")) || [];
   positions = pos || [];
   closed = positions.filter(p=>p.status==="CLOSED");
 
@@ -268,7 +287,7 @@ async function load(){
   render();
 }
 
-function render(){ renderHold(); renderRank(); renderPerf(); }
+function render(){ renderHold(); renderRank(); renderPerf(); renderExclusions(); }
 
 // ── 持倉 ──
 function renderHold(){
@@ -317,11 +336,14 @@ function renderHold(){
         ${qtyTxt?`<div class="mono" style="font-size:12px;color:var(--text);margin-top:3px">👉 下單 <b>${qtyTxt}</b></div>`:""}
         ${warn?`<div style="font-size:11px;color:var(--watch);margin-top:3px">${warn}</div>`:""}
         <div class="sub">權重 ${p.user_weight||"—"}%（NT$${twd.toLocaleString()}）｜ 30日 ${sign(p.momentum_30d)}% ｜ 現價 $${px(now||p.entry_price)} ｜ ${daysBetween(p.entry_at)} 天</div>
+        ${fundHtml(p.symbol)}
         <div class="bar"><i style="width:${Math.min(100,(p.user_weight||0)*5)}%"></i></div>
       </div>
-      <div class="acts">
+      <div class="acts2">
         <div class="act ${a==="DONE"?"on-done":""}" onclick="mark(${p.id},'DONE')">做了</div>
-        <div class="act ${a==="SKIPPED"?"on-skip":""}" onclick="mark(${p.id},'SKIPPED')">跳過</div>
+        <div class="act ${a==="SKIPPED"?"on-skip":""}" onclick="mark(${p.id},'SKIPPED')">不做</div>
+        <div class="act ${a==="NO_PLATFORM"?"on-na":""}" onclick="mark(${p.id},'NO_PLATFORM')">沒上架</div>
+        <div class="act ${a==="TOO_SMALL"?"on-skip":""}" onclick="mark(${p.id},'TOO_SMALL')">太小</div>
       </div>
     </div>`;
   }).join("");
@@ -336,6 +358,40 @@ function renderHold(){
       </div>
       <span class="pill p-short">空</span>
     </div>`).join("");
+}
+
+// 資金費率：持有 19 天要結算 57 次，這裡直接換算成總成本
+// 正值 = 做多要付錢；負值 = 做多收錢
+function fundHtml(sym){
+  const f=fundMap[sym];
+  if(f==null||isNaN(f)) return "";
+  const pct=f*100;                    // 每 8 小時 %
+  const total=pct*3*19;               // 19 天總計 %
+  const spotFee=0.10, futFee=0.04;    // Pionex：現貨來回 0.10%、合約限價來回 0.04%
+  const better = (futFee+total) < spotFee ? "合約" : "現貨";
+  const col = total>0.3 ? "var(--short)" : total<0 ? "var(--long)" : "var(--muted)";
+  return `<div class="sub" style="color:${col}">
+    資金費 ${pct>=0?"+":""}${pct.toFixed(4)}%/8h ｜ 抱 19 天約 ${total>=0?"付":"收"} ${Math.abs(total).toFixed(2)}%
+    ｜ 此檔 <b>${better}</b>較划算</div>`;
+}
+
+function renderExclusions(){
+  const el=document.getElementById("excl");
+  if(!el) return;
+  if(!exclusions.length){
+    el.innerHTML=`<div class="sub">目前沒有排除任何幣種。標記「沒上架」的幣會自動加入這裡。</div>`;
+    return;
+  }
+  el.innerHTML=exclusions.map(e=>`<span class="chip" onclick="unexclude('${e.symbol}')">
+    ${nm(e.symbol)} <b style="color:var(--muted)">✕</b></span>`).join("");
+}
+async function unexclude(sym){
+  if(!confirm(nm(sym)+" 要移出排除清單嗎？\n之後它會重新參與排名。")) return;
+  try{
+    await apiPost("/api/momentum/exclusion",{symbol:sym,remove:true});
+    exclusions=exclusions.filter(e=>e.symbol!==sym);
+    renderExclusions();
+  }catch(e){ alert("移除失敗："+e.message); }
 }
 
 async function mark(id, action){
@@ -382,9 +438,12 @@ function renderPerf(){
 
   // 人工判斷對照
   const longsClosed=c.filter(p=>p.direction==="LONG");
-  const grp={DONE:[],SKIPPED:[],NONE:[]};
-  longsClosed.forEach(p=>grp[p.user_action||"NONE"].push(p));
-  const label={DONE:"✅ 我有做",SKIPPED:"⏭️ 我跳過",NONE:"◽ 沒標記"};
+  // 四種原因要分開看 —— 只有「我判斷不做」才算人工判斷，
+  // 「沒上架」「太小」是平台限制，混在一起分析就失真了
+  const grp={DONE:[],SKIPPED:[],NO_PLATFORM:[],TOO_SMALL:[],NONE:[]};
+  longsClosed.forEach(p=>(grp[p.user_action]||grp.NONE).push(p));
+  const label={DONE:"✅ 我有做",SKIPPED:"🧠 我判斷不做",
+    NO_PLATFORM:"🚫 交易所沒上架",TOO_SMALL:"🔍 金額太小",NONE:"◽ 沒標記"};
   const rows=Object.entries(grp).filter(([,v])=>v.length).map(([k,v])=>{
     const w=v.filter(p=>p.pnl_pct>0).length;
     const avg=v.reduce((a,p)=>a+(+p.pnl_pct||0),0)/v.length;
