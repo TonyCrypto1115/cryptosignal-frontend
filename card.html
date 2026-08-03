@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>排行榜圖卡｜CryptoSignal Tony</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=Dancing+Script:wght@600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+:root{
+  --bg:#fdf7f2;--card:#fff;--border:rgba(200,168,148,.18);
+  --text:#221a16;--soft:#8a6e62;--muted:#c4a898;
+  --coral:#e06050;--rose:#c8506a;--long:#28a870;--short:#e04858;
+  --ds:'Dancing Script',cursive;--mono:'DM Mono',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:#efe6de;color:var(--text);padding:20px}
+.tools{max-width:1080px;margin:0 auto 20px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{padding:9px 16px;border-radius:20px;border:1px solid var(--border);background:#fff;
+  color:var(--text);font-size:13px;font-weight:600;cursor:pointer}
+.btn.on{background:var(--coral);color:#fff;border-color:var(--coral)}
+.note{font-size:12px;color:var(--soft);max-width:1080px;margin:0 auto 16px;line-height:1.7}
+
+/* ── 圖卡本體：1080x1350，IG 直式 ── */
+.shot{width:1080px;height:1350px;background:var(--bg);position:relative;overflow:hidden;
+  margin:0 auto 24px;transform-origin:top left}
+.glow{position:absolute;border-radius:50%;filter:blur(2px)}
+.g1{width:760px;height:760px;left:-380px;top:-380px;background:rgba(224,96,80,.06)}
+.g2{width:700px;height:700px;right:-350px;top:-230px;background:rgba(200,80,106,.06)}
+.inner{position:relative;padding:80px}
+.tag{display:inline-block;background:var(--coral);color:#fff;font-size:24px;font-weight:700;
+  padding:9px 20px;border-radius:24px}
+.tag.cool{background:var(--rose)}
+h1{font-size:76px;font-weight:700;margin:26px 0 6px;letter-spacing:-1px}
+.date{font-family:var(--mono);font-size:26px;color:var(--muted);margin-bottom:34px}
+
+.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px}
+.cell{background:var(--card);border:1px solid var(--border);border-radius:22px;
+  padding:22px 12px;text-align:center}
+.rk{font-family:var(--mono);font-size:22px;color:var(--muted);margin-bottom:12px}
+.ico{width:76px;height:76px;border-radius:50%;margin:0 auto 12px;display:flex;
+  align-items:center;justify-content:center;font-weight:700;font-size:24px;color:#fff;
+  overflow:hidden;background:var(--coral)}
+.ico img{width:100%;height:100%;object-fit:cover}
+.sym{font-size:26px;font-weight:700;margin-bottom:7px;white-space:nowrap;overflow:hidden}
+.pct{font-family:var(--mono);font-size:24px;font-weight:500}
+.up{color:var(--long)}.dn{color:var(--short)}
+
+.foot{position:absolute;left:80px;right:80px;bottom:70px}
+.foot .line{height:1px;background:rgba(200,168,148,.35);margin-bottom:22px}
+.foot .row{display:flex;justify-content:space-between;align-items:center;
+  font-size:25px;color:var(--muted)}
+.sub{font-size:27px;color:var(--soft);line-height:1.65;margin-top:30px}
+</style>
+</head>
+<body>
+
+<div class="tools">
+  <button class="btn on" id="b-top">強勢 TOP 10</button>
+  <button class="btn" id="b-bot">弱勢 BOTTOM 10</button>
+  <button class="btn" id="b-dl" style="margin-left:auto">⬇︎ 下載 PNG</button>
+</div>
+<div class="note">
+  資料來自最新一次排行榜快照。切換上方按鈕看兩種版本，按「下載 PNG」存成 1080×1350 的 IG 圖。<br/>
+  幣種圖示抓不到的會自動變成色塊＋代號，那是正常的（冷門幣多數 CDN 沒有收錄）。
+</div>
+
+<div class="shot" id="shot">
+  <div class="glow g1"></div><div class="glow g2"></div>
+  <div class="inner">
+    <span class="tag" id="tag">動量排行</span>
+    <h1 id="title">強勢 TOP 10</h1>
+    <div class="date" id="date">—</div>
+    <div class="grid" id="row1"></div>
+    <div class="grid" id="row2" style="margin-top:16px"></div>
+  </div>
+  <div class="foot">
+    <div class="sub" id="sub">依過去 30 天報酬排序</div>
+    <div class="line" style="margin-top:26px"></div>
+    <div class="row">
+      <span>@CryptoSignal_Tony</span>
+      <span id="uni">—</span>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL="https://blivdibgijnpoeumfloe.supabase.co";
+const SUPABASE_KEY="sb_publishable_TVMXh4lriOqg4PVOhJ6KQw_drQ1FjcJ";
+
+let rows=[], mode="top";
+
+// 幣種色票：用代號雜湊出穩定的顏色，同一個幣每次都同色
+const PAL=["#e06050","#c8506a","#d4903a","#28a870","#4a7fb5","#8a5fa8","#c26a3a","#3aa8a0"];
+const color=s=>{let h=0;for(const c of s)h=(h*31+c.charCodeAt(0))|0;return PAL[Math.abs(h)%PAL.length];};
+
+const nm=s=>s.replace("USDT","");
+const fmt=n=>(n>=0?"+":"")+(+n).toFixed(1)+"%";
+
+async function load(){
+  const r=await fetch(`${SUPABASE_URL}/rest/v1/momentum_rankings?select=*&order=snapshot_at.desc,rank.asc&limit=300`,
+    {headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`}});
+  const all=await r.json();
+  if(!all.length){ document.getElementById("date").textContent="尚無排行榜資料"; return; }
+  const latest=all[0].snapshot_at;
+  rows=all.filter(x=>x.snapshot_at===latest).sort((a,b)=>a.rank-b.rank);
+  const d=new Date(latest);
+  document.getElementById("date").textContent=
+    d.getFullYear()+"."+String(d.getMonth()+1).padStart(2,"0")+"."+String(d.getDate()).padStart(2,"0");
+  document.getElementById("uni").textContent=rows.length+" 個幣種";
+  render();
+}
+
+function cell(r){
+  const s=nm(r.symbol), c=color(s), up=r.momentum_30d>=0;
+  // 先試 CDN 圖示，抓不到就退回色塊＋代號（冷門幣很常見）
+  const src=`https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/128/color/${s.toLowerCase()}.png`;
+  return `<div class="cell">
+    <div class="rk">${r.rank}</div>
+    <div class="ico" style="background:${c}">
+      <img src="${src}" onerror="this.replaceWith(document.createTextNode('${s.slice(0,3)}'))"/>
+    </div>
+    <div class="sym">${s}</div>
+    <div class="pct ${up?"up":"dn"}">${fmt(r.momentum_30d)}</div>
+  </div>`;
+}
+
+function render(){
+  const top = mode==="top";
+  const list = top ? rows.slice(0,10) : rows.slice(-10).reverse();
+  document.getElementById("row1").innerHTML=list.slice(0,5).map(cell).join("");
+  document.getElementById("row2").innerHTML=list.slice(5,10).map(cell).join("");
+  document.getElementById("title").textContent = top?"強勢 TOP 10":"弱勢 BOTTOM 10";
+  document.getElementById("tag").textContent = top?"動量排行":"弱勢觀察";
+  document.getElementById("tag").className = top?"tag":"tag cool";
+  document.getElementById("sub").textContent = top
+    ? "依過去 30 天報酬排序"
+    : "過去 30 天最弱的 10 檔";
+  document.getElementById("b-top").className = top?"btn on":"btn";
+  document.getElementById("b-bot").className = top?"btn":"btn on";
+}
+
+document.getElementById("b-top").onclick=()=>{mode="top";render();};
+document.getElementById("b-bot").onclick=()=>{mode="bot";render();};
+
+document.getElementById("b-dl").onclick=async()=>{
+  const btn=document.getElementById("b-dl");
+  btn.textContent="產生中…";
+  try{
+    const canvas=await html2canvas(document.getElementById("shot"),
+      {scale:1,backgroundColor:"#fdf7f2",useCORS:true,logging:false});
+    const a=document.createElement("a");
+    a.download=`ranking_${mode}_${new Date().toISOString().slice(0,10)}.png`;
+    a.href=canvas.toDataURL("image/png");
+    a.click();
+  }catch(e){ alert("產生失敗，改用截圖也可以：\\n"+e.message); }
+  btn.textContent="⬇︎ 下載 PNG";
+};
+
+// 手機上把 1080 寬的圖卡縮小顯示
+function fit(){
+  const el=document.getElementById("shot");
+  const w=Math.min(window.innerWidth-40,1080);
+  const s=w/1080;
+  el.style.transform=`scale(${s})`;
+  el.style.marginBottom=(1350*s-1350+24)+"px";
+}
+window.addEventListener("resize",fit);
+fit(); load();
+</script>
+</body>
+</html>
