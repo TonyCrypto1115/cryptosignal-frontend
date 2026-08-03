@@ -59,12 +59,22 @@ h1{font-size:76px;font-weight:700;margin:26px 0 6px;letter-spacing:-1px}
   <button class="btn on" id="b-top">強勢 TOP 10</button>
   <button class="btn" id="b-bot">弱勢 BOTTOM 10</button>
   <button class="btn on" id="b-ico">🖼 幣種圖示</button>
-  <button class="btn" id="b-dl" style="margin-left:auto">⬇︎ 下載 PNG</button>
+  <button class="btn" id="b-dl" style="margin-left:auto">🖼 產生圖片</button>
 </div>
 <div class="note">
-  資料來自最新一次排行榜快照。切換上方按鈕看兩種版本，按「下載 PNG」存成 1080×1350 的 IG 圖。<br/>
+  資料來自最新一次排行榜快照。切換上方按鈕看兩種版本，按「產生圖片」做出 1080×1350 的 IG 圖。<br/>
+  <b>手機：</b>產生後長按圖片就能存到相簿，不用截圖。<br/>
   幣種圖示從 CoinGecko 抓，抓不到的會退回色塊＋代號。<br/>
   如果圖示載入得零零落落不好看，按「🖼 幣種圖示」關掉，全部統一用色塊反而乾淨。
+</div>
+
+<div id="out" style="display:none;max-width:1080px;margin:0 auto 24px;
+     background:#fff;border-radius:16px;padding:16px;text-align:center">
+  <div style="font-size:14px;font-weight:700;margin-bottom:4px">✅ 圖片產生完成</div>
+  <div style="font-size:13px;color:#8a6e62;line-height:1.7;margin-bottom:12px" id="out-tip"></div>
+  <img id="out-img" style="width:100%;max-width:540px;border-radius:12px;
+       box-shadow:0 3px 14px rgba(0,0,0,.12)"/>
+  <div style="font-size:12px;color:#c4a898;margin-top:10px">產生後可以繼續切換上方按鈕，做另一張</div>
 </div>
 
 <div class="shot" id="shot">
@@ -192,18 +202,41 @@ document.getElementById("b-ico").onclick=e=>{
 document.getElementById("b-top").onclick=()=>{mode="top";render();};
 document.getElementById("b-bot").onclick=()=>{mode="bot";render();};
 
+// 手機瀏覽器對「下載」的支援很不穩定，
+// 所以改成：產生圖片後直接顯示在頁面上，長按就能存到相簿。
+const isMobile=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
 document.getElementById("b-dl").onclick=async()=>{
   const btn=document.getElementById("b-dl");
-  btn.textContent="產生中…";
+  btn.textContent="產生中…"; btn.disabled=true;
   try{
-    const canvas=await html2canvas(document.getElementById("shot"),
-      {scale:1,backgroundColor:"#fdf7f2",useCORS:true,logging:false});
-    const a=document.createElement("a");
-    a.download=`ranking_${mode}_${new Date().toISOString().slice(0,10)}.png`;
-    a.href=canvas.toDataURL("image/png");
-    a.click();
-  }catch(e){ alert("產生失敗，改用截圖也可以：\\n"+e.message); }
-  btn.textContent="⬇︎ 下載 PNG";
+    // 圖卡在手機上是縮小顯示的，產圖前先還原成 1080 寬，才不會糊掉
+    const el=document.getElementById("shot");
+    const keep=el.style.transform, keepMb=el.style.marginBottom;
+    el.style.transform="none"; el.style.marginBottom="24px";
+
+    const canvas=await html2canvas(el,
+      {scale:1,width:1080,height:1350,backgroundColor:"#fdf7f2",useCORS:true,logging:false});
+
+    el.style.transform=keep; el.style.marginBottom=keepMb;
+
+    const url=canvas.toDataURL("image/png");
+    document.getElementById("out").style.display="block";
+    document.getElementById("out-img").src=url;
+    document.getElementById("out-tip").innerHTML = isMobile
+      ? "\ud83d\udc47 <b>長按下面的圖片</b> → 選「儲存影像」或「加入照片」"
+      : "已自動下載。沒有的話，<b>右鍵下面的圖片</b> → 另存新檔";
+    if(!isMobile){
+      const a=document.createElement("a");
+      a.download=`ranking_${mode}_${new Date().toISOString().slice(0,10)}.png`;
+      a.href=url; a.click();
+    }
+    // 捲動只是體驗加分，失敗不該讓整個流程被當成錯誤
+    try{ document.getElementById("out").scrollIntoView({behavior:"smooth",block:"center"}); }catch(e){}
+  }catch(e){
+    alert("產生失敗："+e.message+"\n\n可以改用手機截圖，或換電腦試試。");
+  }
+  btn.textContent="🖼 產生圖片"; btn.disabled=false;
 };
 
 // 手機上把 1080 寬的圖卡縮小顯示
