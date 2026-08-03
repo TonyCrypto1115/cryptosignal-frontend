@@ -58,11 +58,13 @@ h1{font-size:76px;font-weight:700;margin:26px 0 6px;letter-spacing:-1px}
 <div class="tools">
   <button class="btn on" id="b-top">強勢 TOP 10</button>
   <button class="btn" id="b-bot">弱勢 BOTTOM 10</button>
+  <button class="btn on" id="b-ico">🖼 幣種圖示</button>
   <button class="btn" id="b-dl" style="margin-left:auto">⬇︎ 下載 PNG</button>
 </div>
 <div class="note">
   資料來自最新一次排行榜快照。切換上方按鈕看兩種版本，按「下載 PNG」存成 1080×1350 的 IG 圖。<br/>
-  幣種圖示抓不到的會自動變成色塊＋代號，那是正常的（冷門幣多數 CDN 沒有收錄）。
+  幣種圖示從 CoinGecko 抓，抓不到的會退回色塊＋代號。<br/>
+  如果圖示載入得零零落落不好看，按「🖼 幣種圖示」關掉，全部統一用色塊反而乾淨。
 </div>
 
 <div class="shot" id="shot">
@@ -88,7 +90,41 @@ h1{font-size:76px;font-weight:700;margin:26px 0 6px;letter-spacing:-1px}
 const SUPABASE_URL="https://blivdibgijnpoeumfloe.supabase.co";
 const SUPABASE_KEY="sb_publishable_TVMXh4lriOqg4PVOhJ6KQw_drQ1FjcJ";
 
-let rows=[], mode="top";
+let rows=[], mode="top", useIcon=true, iconMap={};
+
+/**
+ * 幣種圖示：CoinGecko 收錄率最高，冷門幣多半也有。
+ * 一次抓 1000 個幣建成對照表（4 次呼叫），存 localStorage 一天，
+ * 避免每次開頁面都打 API 被限流。
+ */
+async function loadIcons(){
+  try{
+    const cached=localStorage.getItem("cst_icons");
+    if(cached){
+      const c=JSON.parse(cached);
+      if(Date.now()-c.t < 86400000){ iconMap=c.m; return; }
+    }
+  }catch(e){}
+
+  const map={};
+  for(let page=1;page<=4;page++){
+    try{
+      const r=await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=${page}`);
+      if(!r.ok) break;
+      const list=await r.json();
+      list.forEach(c=>{
+        const k=(c.symbol||"").toUpperCase();
+        if(k && !map[k]) map[k]=c.image;
+      });
+      await new Promise(r=>setTimeout(r,400));   // 客氣一點，避免限流
+    }catch(e){ break; }
+  }
+  if(Object.keys(map).length){
+    iconMap=map;
+    try{ localStorage.setItem("cst_icons",JSON.stringify({t:Date.now(),m:map})); }catch(e){}
+  }
+  console.log("幣種圖示對照表：",Object.keys(iconMap).length,"個");
+}
 
 // 幣種色票：用代號雜湊出穩定的顏色，同一個幣每次都同色
 const PAL=["#e06050","#c8506a","#d4903a","#28a870","#4a7fb5","#8a5fa8","#c26a3a","#3aa8a0"];
@@ -113,13 +149,21 @@ async function load(){
 
 function cell(r){
   const s=nm(r.symbol), c=color(s), up=r.momentum_30d>=0;
-  // 先試 CDN 圖示，抓不到就退回色塊＋代號（冷門幣很常見）
-  const src=`https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/128/color/${s.toLowerCase()}.png`;
+  // 三層備援：CoinGecko → jsdelivr → 色塊＋代號
+  const cg=iconMap[s];
+  const fb=`https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/128/color/${s.toLowerCase()}.png`;
+  const badge=`this.parentNode.innerHTML='${s.slice(0,4)}'`;
+  let inner;
+  if(!useIcon){
+    inner=s.slice(0,4);
+  }else if(cg){
+    inner=`<img src="${cg}" crossorigin="anonymous" onerror="this.onerror=null;this.src='${fb}';this.setAttribute('onerror','${badge}')"/>`;
+  }else{
+    inner=`<img src="${fb}" crossorigin="anonymous" onerror="${badge}"/>`;
+  }
   return `<div class="cell">
     <div class="rk">${r.rank}</div>
-    <div class="ico" style="background:${c}">
-      <img src="${src}" onerror="this.replaceWith(document.createTextNode('${s.slice(0,3)}'))"/>
-    </div>
+    <div class="ico" style="background:${c}">${inner}</div>
     <div class="sym">${s}</div>
     <div class="pct ${up?"up":"dn"}">${fmt(r.momentum_30d)}</div>
   </div>`;
@@ -140,6 +184,11 @@ function render(){
   document.getElementById("b-bot").className = top?"btn":"btn on";
 }
 
+document.getElementById("b-ico").onclick=e=>{
+  useIcon=!useIcon;
+  e.target.className=useIcon?"btn on":"btn";
+  render();
+};
 document.getElementById("b-top").onclick=()=>{mode="top";render();};
 document.getElementById("b-bot").onclick=()=>{mode="bot";render();};
 
@@ -166,7 +215,8 @@ function fit(){
   el.style.marginBottom=(1350*s-1350+24)+"px";
 }
 window.addEventListener("resize",fit);
-fit(); load();
+fit();
+loadIcons().then(load);
 </script>
 </body>
 </html>
