@@ -104,10 +104,20 @@ header{padding:18px 0 12px;display:flex;align-items:center;justify-content:space
 <!-- ══ 本週持倉 ══ -->
 <div class="page on" id="p-hold">
   <div class="card">
-    <h3>💰 資金配置</h3>
+    <h3>💰 資金與損益</h3>
     <div class="row" style="border:none;padding:4px 0">
       <div class="grow"><div class="mono" id="cap-total">—</div><div class="sub">實際部位（本金 × 曝險）</div></div>
-      <div style="text-align:right"><div class="mono" id="cap-n">—</div><div class="sub">多單檔數</div></div>
+      <div style="text-align:right"><div class="mono" id="cap-n">—</div><div class="sub">你做的檔數</div></div>
+    </div>
+    <div class="stats" style="margin:10px 0 0">
+      <div class="stat"><div class="v" id="pl-un">—</div><div class="l">未實現</div></div>
+      <div class="stat"><div class="v" id="pl-re">—</div><div class="l">已實現</div></div>
+      <div class="stat"><div class="v" id="pl-all">—</div><div class="l">合計</div></div>
+      <div class="stat"><div class="v" id="pl-twd">—</div><div class="l">約台幣</div></div>
+    </div>
+    <div class="hint">
+      這四個數字只算<b>你標「做了」的部位</b>，用你的權重加權。<br/>
+      系統整體（含空單）的表現在「績效」分頁。
     </div>
   </div>
 
@@ -176,6 +186,12 @@ header{padding:18px 0 12px;display:flex;align-items:center;justify-content:space
   </div>
 
   <div class="card">
+    <h3>🔄 換倉歷史</h3>
+    <div id="rebal"><div class="load">載入中…</div></div>
+    <div class="hint">每週一 20:00 自動換倉。掉出排名的部位會在這時結算。</div>
+  </div>
+
+  <div class="card">
     <h3>📜 已平倉紀錄</h3>
     <div id="closed"><div class="load">載入中…</div></div>
   </div>
@@ -193,7 +209,7 @@ const API_BASE="https://cryptosignal-backend-production.up.railway.app";
 const CAPITAL_TWD=30000, EXPOSURE=0.30;
 const USD_TWD=32.5;   // 匯率，換算 USDT 用
 
-let positions=[], rankings=[], closed=[], priceMap={}, specMap={}, fundMap={}, exclusions=[];
+let positions=[], rankings=[], closed=[], priceMap={}, specMap={}, fundMap={}, exclusions=[], rebalances=[];
 
 // ── 讀取（只讀，寫入一律走後端）──
 async function sbGet(q){
@@ -273,6 +289,7 @@ async function load(){
     loadSpecs(),
   ]);
   exclusions = (await sbGet("momentum_exclusions?select=*&order=symbol.asc")) || [];
+  rebalances = (await sbGet("momentum_rebalances?select=*&order=executed_at.desc&limit=60")) || [];
   positions = pos || [];
   closed = positions.filter(p=>p.status==="CLOSED");
 
@@ -287,7 +304,33 @@ async function load(){
   render();
 }
 
-function render(){ renderHold(); renderRank(); renderPerf(); renderExclusions(); }
+function renderRebal(){
+  const el=document.getElementById("rebal");
+  if(!el) return;
+  if(!rebalances.length){
+    el.innerHTML=`<div class="empty">尚無換倉紀錄</div>`;
+    return;
+  }
+  el.innerHTML=rebalances.map(rb=>{
+    // 這次換倉開了哪些倉、其中平掉的損益如何
+    const opened=positions.filter(p=>p.rebalance_id===rb.id);
+    const done=opened.filter(p=>p.status==="CLOSED");
+    const sum=done.reduce((a,p)=>a+(+p.pnl_pct||0),0);
+    const d=new Date(rb.executed_at);
+    const dt=d.toLocaleDateString("zh-TW",{timeZone:"Asia/Taipei",month:"2-digit",day:"2-digit"})
+      +" "+d.toLocaleTimeString("zh-TW",{timeZone:"Asia/Taipei",hour:"2-digit",minute:"2-digit"});
+    return `<div class="row">
+      <div class="rk">#${rb.rebalance_no||"—"}</div>
+      <div class="grow">
+        <b style="font-size:13px">${dt}</b>
+        <div class="sub">幣種池 ${rb.universe_size||"—"} 檔 ｜ 新開 ${opened.length} 檔 ｜ 已結算 ${done.length} 檔</div>
+      </div>
+      ${done.length?`<div class="mono ${cls(sum/done.length)}" style="font-size:13px">${sign(sum/done.length)}%</div>`:`<span class="pill p-open">進行中</span>`}
+    </div>`;
+  }).join("");
+}
+
+function render(){ renderHold(); renderRank(); renderPerf(); renderExclusions(); renderRebal(); }
 
 // ── 持倉 ──
 function renderHold(){
@@ -298,7 +341,39 @@ function renderHold(){
   const total = CAPITAL_TWD*EXPOSURE;
   document.getElementById("cap-total").textContent =
     (total/USD_TWD).toFixed(0)+" USDT  (NT$"+total.toLocaleString()+")";
-  document.getElementById("cap-n").textContent = longs.length+" 檔";
+
+  // ── 損益總覽：只算你標「做了」的部位 ──
+  // 部位損益 x 該部位權重 = 對整體帳戶的貢獻
+  const mine = positions.filter(p=>p.user_action==="DONE" && p.direction==="LONG");
+  const mineOpen = mine.filter(p=>p.status==="OPEN");
+  const mineClosed = mine.filter(p=>p.status==="CLOSED");
+  document.getElementById("cap-n").textContent = mineOpen.length+" 檔";
+
+  let un=0;
+  mineOpen.forEach(p=>{
+    const now=priceMap[p.symbol];
+    if(now && p.entry_price>0) un += (now/p.entry_price-1)*100 * (p.user_weight||0)/100;
+  });
+  let re=0;
+  mineClosed.forEach(p=>{ re += (+p.pnl_pct||0) * (p.user_weight||0)/100; });
+  const all=un+re;
+
+  const put=(id,v,suffix)=>{
+    const el=document.getElementById(id); if(!el) return;
+    el.textContent = (v>=0?"+":"")+v.toFixed(2)+(suffix||"%");
+    el.style.color = v>0?"var(--long)":v<0?"var(--short)":"var(--text)";
+  };
+  if(mine.length){
+    put("pl-un",un); put("pl-re",re); put("pl-all",all);
+    const twd=total*all/100;
+    const el=document.getElementById("pl-twd");
+    el.textContent=(twd>=0?"+":"")+Math.round(twd).toLocaleString();
+    el.style.color=twd>0?"var(--long)":twd<0?"var(--short)":"var(--text)";
+  }else{
+    ["pl-un","pl-re","pl-all","pl-twd"].forEach(id=>{
+      const el=document.getElementById(id); if(el){ el.textContent="—"; el.style.color="var(--muted)"; }
+    });
+  }
 
   const el=document.getElementById("hold-long");
   if(!longs.length){ el.innerHTML=`<div class="empty">尚無持倉<br/><span style="font-size:11px">每週一 20:00 換倉後會出現</span></div>`; }
