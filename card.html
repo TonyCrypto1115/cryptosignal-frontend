@@ -28,6 +28,9 @@ body{font-family:'DM Sans',sans-serif;background:#efe6de;color:var(--text);paddi
 .g1{width:760px;height:760px;left:-380px;top:-380px;background:rgba(224,96,80,.06)}
 .g2{width:700px;height:700px;right:-350px;top:-230px;background:rgba(200,80,106,.06)}
 .inner{position:relative;padding:80px}
+.hd{display:flex;align-items:center;justify-content:space-between}
+.acct{font-size:25px;color:var(--muted);font-weight:500}
+.sub2{font-size:26px;color:var(--soft);margin:-20px 0 30px}
 .tag{display:inline-block;background:var(--coral);color:#fff;font-size:24px;font-weight:700;
   padding:9px 20px;border-radius:24px}
 .tag.cool{background:var(--rose)}
@@ -93,19 +96,23 @@ h1{font-size:76px;font-weight:700;margin:26px 0 6px;letter-spacing:-1px}
 <div class="shot" id="shot">
   <div class="glow g1"></div><div class="glow g2"></div>
   <div class="inner">
-    <span class="tag" id="tag">動量排行</span>
+    <div class="hd">
+      <span class="tag" id="tag">動量排行</span>
+      <span class="acct">@CryptoSignal_Tony</span>
+    </div>
     <h1 id="title">強勢 TOP 10</h1>
     <div class="date" id="date">—</div>
+    <div class="sub2" id="sub2"></div>
     <div class="grid" id="row1"></div>
     <div class="grid" id="row2" style="margin-top:16px"></div>
     <div class="full" id="fullList" style="display:none"></div>
   </div>
-  <div class="foot">
+  <div class="foot" id="foot">
     <div class="sub" id="sub">依過去 30 天報酬排序</div>
     <div class="line" style="margin-top:26px"></div>
     <div class="row">
-      <span>@CryptoSignal_Tony</span>
       <span id="uni">—</span>
+      <span id="datefoot"></span>
     </div>
   </div>
 </div>
@@ -168,6 +175,8 @@ async function load(){
   document.getElementById("date").textContent=
     d.getFullYear()+"."+String(d.getMonth()+1).padStart(2,"0")+"."+String(d.getDate()).padStart(2,"0");
   document.getElementById("uni").textContent=rows.length+" 個幣種";
+  document.getElementById("datefoot").textContent=
+    document.getElementById("date").textContent;
   buildPageBtns();
   render();
 }
@@ -222,8 +231,11 @@ function renderFull(page){
   document.getElementById("title").textContent=`第 ${from+1}–${from+list.length} 名`;
   document.getElementById("tag").textContent=`完整排名 ${page}/${total}`;
   document.getElementById("tag").className="tag";
-  document.getElementById("sub").textContent =
-    page===1 ? "依過去 30 天報酬排序 ｜ 紅色為主流幣" : "紅色為主流幣";
+  // 完整排名列數多，底部整塊拿掉，說明移到標題下方，避免文字互相壓到
+  document.getElementById("foot").style.display="none";
+  document.getElementById("sub2").style.display="block";
+  document.getElementById("sub2").textContent=
+    `依過去 30 天報酬排序 ｜ 紅色為主流幣 ｜ 共 ${rows.length} 檔`;
   markBtn("b-f"+page);
 }
 
@@ -252,6 +264,8 @@ function render(){
   document.getElementById("row1").style.display="grid";
   document.getElementById("row2").style.display="grid";
   document.getElementById("fullList").style.display="none";
+  document.getElementById("foot").style.display="block";
+  document.getElementById("sub2").style.display="none";
   const top = mode==="top";
   const list = top ? rows.slice(0,10) : rows.slice(-10).reverse();
   document.getElementById("row1").innerHTML=list.slice(0,5).map(cell).join("");
