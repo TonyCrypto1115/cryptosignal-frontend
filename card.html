@@ -46,14 +46,16 @@ h1{font-size:76px;font-weight:700;margin:26px 0 6px;letter-spacing:-1px}
 .pct{font-family:var(--mono);font-size:24px;font-weight:500}
 .up{color:var(--long)}.dn{color:var(--short)}
 
-/* ── 完整排名：兩欄密集列表 ── */
-.full{display:grid;grid-template-columns:1fr 1fr;gap:0 40px}
-.fr{display:flex;align-items:center;gap:12px;padding:9px 12px;border-radius:10px}
-.fr.major{background:rgba(224,96,80,.09)}
-.fr .n{font-family:var(--mono);font-size:25px;color:var(--muted);width:52px;text-align:right}
-.fr .s{font-size:28px;font-weight:700;flex:1;overflow:hidden;white-space:nowrap}
+/* ── 完整排名：單欄大字，一張 20 檔 ── */
+.full{display:block}
+.fr{display:flex;align-items:center;gap:18px;padding:12px 20px;border-radius:14px;
+  border-bottom:1px solid rgba(200,168,148,.16);height:57px;box-sizing:border-box}
+.fr:last-child{border-bottom:none}
+.fr.major{background:rgba(224,96,80,.08)}
+.fr .n{font-family:var(--mono);font-size:28px;color:var(--muted);width:66px;text-align:right}
+.fr .s{font-size:36px;font-weight:700;flex:1;overflow:hidden;white-space:nowrap;letter-spacing:-.5px}
 .fr.major .s{color:var(--coral)}
-.fr .p{font-family:var(--mono);font-size:26px;font-weight:500}
+.fr .p{font-family:var(--mono);font-size:32px;font-weight:500}
 
 .foot{position:absolute;left:80px;right:80px;bottom:70px}
 .foot .line{height:1px;background:rgba(200,168,148,.35);margin-bottom:22px}
@@ -67,8 +69,7 @@ h1{font-size:76px;font-weight:700;margin:26px 0 6px;letter-spacing:-1px}
 <div class="tools">
   <button class="btn on" id="b-top">強勢 TOP 10</button>
   <button class="btn" id="b-bot">弱勢 BOTTOM 10</button>
-  <button class="btn" id="b-f1">完整排名 上</button>
-  <button class="btn" id="b-f2">完整排名 下</button>
+  <span id="pageBtns" style="display:inline-flex;gap:6px;flex-wrap:wrap"></span>
   <button class="btn" id="b-copy">📋 複製文字版</button>
   <button class="btn on" id="b-ico">🖼 幣種圖示</button>
   <button class="btn" id="b-dl" style="margin-left:auto">🖼 產生圖片</button>
@@ -167,6 +168,7 @@ async function load(){
   document.getElementById("date").textContent=
     d.getFullYear()+"."+String(d.getMonth()+1).padStart(2,"0")+"."+String(d.getDate()).padStart(2,"0");
   document.getElementById("uni").textContent=rows.length+" 個幣種";
+  buildPageBtns();
   render();
 }
 
@@ -206,30 +208,47 @@ function fullRow(r){
   </div>`;
 }
 
-function renderFull(half){
-  const mid=Math.ceil(rows.length/2);
-  const list = half===1 ? rows.slice(0,mid) : rows.slice(mid);
-  const h=Math.ceil(list.length/2);
-  // 左欄由上往下、右欄接續，這樣名次是連續的
-  const col1=list.slice(0,h), col2=list.slice(h);
-  document.getElementById("fullList").innerHTML =
-    `<div>${col1.map(fullRow).join("")}</div><div>${col2.map(fullRow).join("")}</div>`;
+const PER_PAGE=15;   // 15 檔剛好塞滿一張 1350 高的圖，字可以放到 36px
+
+function renderFull(page){
+  const from=(page-1)*PER_PAGE;
+  const list=rows.slice(from, from+PER_PAGE);
+  document.getElementById("fullList").innerHTML=list.map(fullRow).join("");
   document.getElementById("row1").style.display="none";
   document.getElementById("row2").style.display="none";
-  document.getElementById("fullList").style.display="grid";
-  document.getElementById("title").textContent =
-    half===1 ? `完整排名 1–${mid}` : `完整排名 ${mid+1}–${rows.length}`;
-  document.getElementById("tag").textContent="動量排行";
+  document.getElementById("fullList").style.display="block";
+
+  const total=Math.ceil(rows.length/PER_PAGE);
+  document.getElementById("title").textContent=`第 ${from+1}–${from+list.length} 名`;
+  document.getElementById("tag").textContent=`完整排名 ${page}/${total}`;
   document.getElementById("tag").className="tag";
   document.getElementById("sub").textContent =
-    half===1 ? "依過去 30 天報酬排序 ｜ 紅色為主流幣" : "後半段 ｜ 紅色為主流幣";
-  ["b-top","b-bot","b-f1","b-f2"].forEach(id=>document.getElementById(id).className="btn");
-  document.getElementById(half===1?"b-f1":"b-f2").className="btn on";
+    page===1 ? "依過去 30 天報酬排序 ｜ 紅色為主流幣" : "紅色為主流幣";
+  markBtn("b-f"+page);
+}
+
+// 依實際幣種數自動產生分頁按鈕
+function buildPageBtns(){
+  const total=Math.ceil(rows.length/PER_PAGE);
+  const el=document.getElementById("pageBtns");
+  el.innerHTML=Array.from({length:total},(_,i)=>
+    `<button class="btn" id="b-f${i+1}">排名 ${i*PER_PAGE+1}–${Math.min(rows.length,(i+1)*PER_PAGE)}</button>`
+  ).join("");
+  for(let i=1;i<=total;i++){
+    document.getElementById("b-f"+i).onclick=()=>{mode="full"+i;render();};
+  }
+}
+
+function markBtn(id){
+  document.querySelectorAll(".tools .btn").forEach(b=>{
+    if(b.id!=="b-dl"&&b.id!=="b-copy"&&b.id!=="b-ico") b.className="btn";
+  });
+  const t=document.getElementById(id);
+  if(t) t.className="btn on";
 }
 
 function render(){
-  if(mode==="full1") return renderFull(1);
-  if(mode==="full2") return renderFull(2);
+  if(mode.startsWith("full")) return renderFull(parseInt(mode.slice(4)));
   document.getElementById("row1").style.display="grid";
   document.getElementById("row2").style.display="grid";
   document.getElementById("fullList").style.display="none";
@@ -243,8 +262,7 @@ function render(){
   document.getElementById("sub").textContent = top
     ? "依過去 30 天報酬排序"
     : "過去 30 天最弱的 10 檔";
-  ["b-top","b-bot","b-f1","b-f2"].forEach(id=>document.getElementById(id).className="btn");
-  document.getElementById(top?"b-top":"b-bot").className="btn on";
+  markBtn(top?"b-top":"b-bot");
 }
 
 document.getElementById("b-ico").onclick=e=>{
@@ -254,8 +272,6 @@ document.getElementById("b-ico").onclick=e=>{
 };
 document.getElementById("b-top").onclick=()=>{mode="top";render();};
 document.getElementById("b-bot").onclick=()=>{mode="bot";render();};
-document.getElementById("b-f1").onclick=()=>{mode="full1";render();};
-document.getElementById("b-f2").onclick=()=>{mode="full2";render();};
 
 // Threads 是文字優先的平台，純文字版比圖片更好用
 document.getElementById("b-copy").onclick=async()=>{
