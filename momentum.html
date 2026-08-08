@@ -18,7 +18,22 @@
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:80px}
-.wrap{max-width:720px;margin:0 auto;padding:0 16px}
+.wrap{max-width:1360px;margin:0 auto;padding:0 16px}
+
+/* ── 儀表板網格：寬螢幕分欄，手機自動疊成單欄 ── */
+.dash{display:grid;gap:14px;align-items:start}
+.dash.side{grid-template-columns:1fr}
+.dash.two{grid-template-columns:1fr}
+@media(min-width:980px){
+  .dash.side{grid-template-columns:400px 1fr}
+  .dash.two{grid-template-columns:1fr 1fr}
+  .card{margin-bottom:0}
+  .col{display:flex;flex-direction:column;gap:14px}
+}
+/* 排行榜在寬螢幕自動多欄 */
+.rankgrid{display:grid;gap:0 28px;grid-template-columns:1fr}
+@media(min-width:760px){ .rankgrid{grid-template-columns:1fr 1fr} }
+@media(min-width:1180px){ .rankgrid{grid-template-columns:1fr 1fr 1fr} }
 
 /* ── header ── */
 header{padding:18px 0 12px;display:flex;align-items:center;justify-content:space-between}
@@ -105,6 +120,8 @@ header{padding:18px 0 12px;display:flex;align-items:center;justify-content:space
 
 <!-- ══ 本週持倉 ══ -->
 <div class="page on" id="p-hold">
+<div class="dash side">
+<div class="col">
   <div class="card">
     <h3>⚙️ 資金設定</h3>
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
@@ -132,27 +149,31 @@ header{padding:18px 0 12px;display:flex;align-items:center;justify-content:space
   <div class="card">
     <h3>📒 我的實際帳戶<span style="font-size:10px;color:var(--muted);font-weight:400">（自己填）</span></h3>
     <div class="stats" style="margin:0 0 10px">
-      <div class="stat"><div class="v" id="eq-now">—</div><div class="l">目前淨值</div></div>
-      <div class="stat"><div class="v" id="eq-chg">—</div><div class="l">總損益</div></div>
+      <div class="stat"><div class="v" id="eq-now">—</div><div class="l">倉位市值</div></div>
+      <div class="stat"><div class="v" id="eq-chg">—</div><div class="l">未實現盈虧</div></div>
       <div class="stat"><div class="v" id="eq-pct">—</div><div class="l">報酬率</div></div>
       <div class="stat"><div class="v" id="eq-gap">—</div><div class="l">執行落差</div></div>
     </div>
-    <div style="display:flex;gap:8px;align-items:flex-end">
-      <label style="flex:1">
-        <div class="sub" style="margin-bottom:4px">交易所帳戶總淨值（USDT）</div>
-        <input id="eq-in" type="number" step="0.01" class="inp" placeholder="例如 265.4"/>
+    <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap">
+      <label style="flex:1;min-width:110px">
+        <div class="sub" style="margin-bottom:4px">倉位總市值 U</div>
+        <input id="eq-val" type="number" step="0.01" class="inp" placeholder="265.4"/>
       </label>
-      <label style="flex:1">
+      <label style="flex:1;min-width:110px">
+        <div class="sub" style="margin-bottom:4px">未實現盈虧 U</div>
+        <input id="eq-pnl" type="number" step="0.01" class="inp" placeholder="-12.3"/>
+      </label>
+      <label style="flex:1;min-width:110px">
         <div class="sub" style="margin-bottom:4px">備註（選填）</div>
-        <input id="eq-note" type="text" class="inp" placeholder="加碼 / 出金…"/>
+        <input id="eq-note" type="text" class="inp" placeholder="加碼…"/>
       </label>
-      <button class="act" style="padding:9px 14px" onclick="saveEquity()">記錄</button>
+      <button class="act" style="padding:9px 16px" onclick="saveEquity()">記錄</button>
     </div>
     <div id="eq-list" style="margin-top:8px"></div>
     <div class="hint">
-      每週換倉後填一次就好，打開交易所看總淨值抄下來。<br/>
-      <b>執行落差</b> = 系統理論績效 − 你的實際績效，也就是延遲、滑價、手續費的總成本。<br/>
-      ⚠️ 如果中間有入金或出金，記得在備註寫，不然報酬率會失真。
+      每週換倉後填一次，打開交易所持倉頁抄兩個數字就好。<br/>
+      記倉位而不是帳戶淨值，是因為閒置的 USDT 會把報酬率稀釋掉。<br/>
+      <b>執行落差</b> = 系統理論績效 − 你的實際報酬率，也就是延遲、滑價、手續費的總成本。
     </div>
   </div>
 
@@ -176,12 +197,15 @@ header{padding:18px 0 12px;display:flex;align-items:center;justify-content:space
     </div>
   </div>
 
+</div>
+
+<div class="col">
   <div class="card">
     <h3>📌 做多持倉<span style="font-size:10px;color:var(--muted);font-weight:400">（你實際操作的）</span></h3>
     <div id="hold-long"><div class="load">載入中…</div></div>
     <div class="hint">
-      👉 每次換倉後，請點「做了」或「跳過」。<br/>
-      這份紀錄是用來回答：<b>你的人工判斷是加分還是減分</b>。半年後才有答案，但現在不記就永遠沒有。
+      👉 每次換倉後，請點「做了」「不做」「沒上架」或「太小」。<br/>
+      這份紀錄是用來回答：<b>你的人工判斷是加分還是減分</b>。
     </div>
   </div>
 
@@ -201,12 +225,14 @@ header{padding:18px 0 12px;display:flex;align-items:center;justify-content:space
     <div class="hint">空單設有 −30% 止損，觸發時 Telegram 會通知。這半邊只是為了讓策略紀錄完整。</div>
   </div>
 </div>
+</div>
+</div>
 
 <!-- ══ 動量排行 ══ -->
 <div class="page" id="p-rank">
   <div class="card">
-    <h3>🔥 動量排行 Top 20</h3>
-    <div id="rank-list"><div class="load">載入中…</div></div>
+    <h3>🔥 動量排行 Top 30</h3>
+    <div id="rank-list" class="rankgrid"><div class="load">載入中…</div></div>
     <div class="hint">依過去 30 天報酬排序，每日更新。<b>這是觀察，不是進場建議。</b></div>
   </div>
 </div>
@@ -214,9 +240,9 @@ header{padding:18px 0 12px;display:flex;align-items:center;justify-content:space
 <!-- ══ 弱勢觀察 ══ -->
 <div class="page" id="p-weak">
   <div class="card">
-    <h3>❄️ 弱勢觀察 Bottom 20</h3>
-    <div id="weak-list"><div class="load">載入中…</div></div>
-    <div class="hint">過去 30 天最弱的 20 檔。呈現市場結構用，<b>不是做空建議</b>。</div>
+    <h3>❄️ 弱勢觀察 Bottom 30</h3>
+    <div id="weak-list" class="rankgrid"><div class="load">載入中…</div></div>
+    <div class="hint">過去 30 天最弱的 30 檔。呈現市場結構用，<b>不是做空建議</b>。</div>
   </div>
 </div>
 
@@ -229,6 +255,8 @@ header{padding:18px 0 12px;display:flex;align-items:center;justify-content:space
     <div class="stat"><div class="v" id="s-days">—</div><div class="l">平均持有</div></div>
   </div>
 
+<div class="dash two">
+<div class="col">
   <div class="card">
     <h3>🧠 人工判斷 vs 系統</h3>
     <div id="judge"><div class="load">資料累積中…</div></div>
@@ -240,6 +268,8 @@ header{padding:18px 0 12px;display:flex;align-items:center;justify-content:space
     </div>
   </div>
 
+</div>
+<div class="col">
   <div class="card">
     <h3>🔄 換倉歷史</h3>
     <div id="rebal"><div class="load">載入中…</div></div>
@@ -250,6 +280,8 @@ header{padding:18px 0 12px;display:flex;align-items:center;justify-content:space
     <h3>📜 已平倉紀錄</h3>
     <div id="closed"><div class="load">載入中…</div></div>
   </div>
+</div>
+</div>
 </div>
 
 </div>
@@ -542,16 +574,19 @@ async function unexclude(sym){
 
 // ── 實際帳戶淨值 ──
 async function saveEquity(){
-  const v=parseFloat(document.getElementById("eq-in").value);
-  if(!(v>=0)){ alert("請輸入帳戶總淨值（USDT）"); return; }
+  const val=parseFloat(document.getElementById("eq-val").value);
+  const pnl=parseFloat(document.getElementById("eq-pnl").value);
+  if(!(val>0)){ alert("請輸入倉位總市值"); return; }
+  if(isNaN(pnl)){ alert("請輸入未實現盈虧（虧損填負數）"); return; }
   const note=document.getElementById("eq-note").value.trim();
   try{
-    await apiPost("/api/momentum/equity",{equity_usdt:v,note});
-    document.getElementById("eq-in").value="";
+    await apiPost("/api/momentum/equity",{position_value_usdt:val,position_pnl_usdt:pnl,note});
+    document.getElementById("eq-val").value="";
+    document.getElementById("eq-pnl").value="";
     document.getElementById("eq-note").value="";
     equity=(await sbGet("account_equity?select=*&order=recorded_at.asc&limit=200"))||[];
     renderEquity();
-    alert("已記錄 "+v+" USDT");
+    alert("已記錄：倉位 "+val+"U，盈虧 "+(pnl>=0?"+":"")+pnl+"U");
   }catch(e){ alert("記錄失敗："+e.message); }
 }
 
@@ -571,35 +606,39 @@ function renderEquity(){
     const e=document.getElementById(id); if(!e) return;
     e.textContent=txt; e.style.color=color||"var(--text)";
   };
-  if(!equity.length){
+  const rows=equity.filter(e=>e.position_value_usdt!=null);
+  if(!rows.length){
     ["eq-now","eq-chg","eq-pct","eq-gap"].forEach(id=>set(id,"—","var(--muted)"));
-    el.innerHTML=`<div class="sub" style="padding:6px 0">還沒有紀錄。先填一次目前的帳戶淨值當起點。</div>`;
+    el.innerHTML=`<div class="sub" style="padding:6px 0">還沒有紀錄。到交易所持倉頁抄「倉位市值」和「未實現盈虧」填進來。</div>`;
     return;
   }
-  const first=equity[0], last=equity[equity.length-1];
-  const chg=last.equity_usdt-first.equity_usdt;
-  const pct=first.equity_usdt>0 ? chg/first.equity_usdt*100 : 0;
+  const last=rows[rows.length-1];
+  const val=+last.position_value_usdt, pnl=+last.position_pnl_usdt;
+  const cost=val-pnl;                         // 成本 = 市值 − 盈虧
+  const pct=cost>0 ? pnl/cost*100 : 0;
   const col=v=>v>0?"var(--long)":v<0?"var(--short)":"var(--text)";
 
-  set("eq-now", (+last.equity_usdt).toFixed(1)+"U");
-  set("eq-chg", (chg>=0?"+":"")+chg.toFixed(1)+"U", col(chg));
+  set("eq-now", val.toFixed(1)+"U");
+  set("eq-chg", (pnl>=0?"+":"")+pnl.toFixed(1)+"U", col(pnl));
   set("eq-pct", (pct>=0?"+":"")+pct.toFixed(2)+"%", col(pct));
 
   // 執行落差 = 系統理論 − 實際。正值代表實際比理論差（被成本吃掉）
   const theo=window.__theoPct;
-  if(theo!=null && equity.length>=2){
+  if(theo!=null){
     const gap=theo-pct;
     set("eq-gap", (gap>=0?"-":"+")+Math.abs(gap).toFixed(2)+"%", gap>0?"var(--short)":"var(--long)");
   }else{
     set("eq-gap","—","var(--muted)");
   }
 
-  el.innerHTML=equity.slice().reverse().slice(0,6).map(e=>{
+  el.innerHTML=rows.slice().reverse().slice(0,6).map(e=>{
     const d=new Date(e.recorded_at);
-    const dt=d.toLocaleDateString("zh-TW",{timeZone:"Asia/Taipei",month:"2-digit",day:"2-digit"})
-      +" "+d.toLocaleTimeString("zh-TW",{timeZone:"Asia/Taipei",hour:"2-digit",minute:"2-digit"});
+    const dt=d.toLocaleDateString("zh-TW",{timeZone:"Asia/Taipei",month:"2-digit",day:"2-digit"});
+    const p=+e.position_pnl_usdt;
     return `<div class="row" style="padding:7px 0">
-      <div class="grow"><span class="mono" style="font-size:13px">${(+e.equity_usdt).toFixed(1)}U</span>
+      <div class="grow">
+        <span class="mono" style="font-size:13px">${(+e.position_value_usdt).toFixed(1)}U</span>
+        <span class="mono ${p>=0?"pos":"neg"}" style="font-size:13px;margin-left:8px">${p>=0?"+":""}${p.toFixed(1)}U</span>
         <span class="sub" style="display:inline;margin-left:8px">${dt}${e.note?" ｜ "+e.note:""}</span></div>
       <div class="act" style="padding:3px 8px;font-size:10px" onclick="delEquity(${e.id})">刪</div>
     </div>`;
@@ -637,8 +676,8 @@ function renderRank(){
       </div>
     </div>`;
 
-  const top=rankings.slice(0,20);
-  const bottom=rankings.slice(-20).reverse();
+  const top=rankings.slice(0,30);
+  const bottom=rankings.slice(-30).reverse();
   document.getElementById("rank-list").innerHTML =
     top.length? top.map(rowHtml).join("")
     : `<div class="empty">尚無排行榜資料<br/><span style="font-size:11px">系統每日 08:00（台灣）更新</span></div>`;
