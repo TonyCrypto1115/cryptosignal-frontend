@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>績效圖卡｜CryptoSignal Tony</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=Dancing+Script:wght@600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+:root{
+  --bg:#fdf7f2;--card:#fff;--border:rgba(200,168,148,.18);
+  --text:#221a16;--soft:#8a6e62;--muted:#c4a898;
+  --coral:#e06050;--rose:#c8506a;--long:#28a870;--short:#e04858;
+  --mono:'DM Mono',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:#efe6de;color:var(--text);padding:20px}
+.tools{max-width:1080px;margin:0 auto 14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{padding:9px 16px;border-radius:20px;border:1px solid var(--border);background:#fff;
+  color:var(--text);font-size:13px;font-weight:600;cursor:pointer}
+.btn.on{background:var(--coral);color:#fff;border-color:var(--coral)}
+.panel{max-width:1080px;margin:0 auto 16px;background:#fff;border-radius:14px;padding:14px;
+  display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+.panel label{flex:1;min-width:120px}
+.panel .lb{font-size:12px;color:#8a6e62;margin-bottom:4px}
+.inp{width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:9px;
+  font-family:var(--mono);font-size:14px;background:#fdf7f2}
+.note{font-size:12px;color:#8a6e62;max-width:1080px;margin:0 auto 16px;line-height:1.7}
+
+.shot{width:1080px;height:1350px;background:var(--bg);position:relative;overflow:hidden;
+  margin:0 auto 24px;transform-origin:top left}
+.glow{position:absolute;border-radius:50%}
+.g1{width:780px;height:780px;left:-390px;top:-390px;background:rgba(224,96,80,.055)}
+.g2{width:700px;height:700px;right:-350px;top:-230px;background:rgba(200,80,106,.055)}
+.inner{position:relative;padding:80px}
+.hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.tag{display:inline-block;background:var(--coral);color:#fff;font-size:24px;font-weight:700;
+  padding:9px 20px;border-radius:24px}
+.acct{font-size:25px;color:var(--muted);font-weight:500}
+h1{font-size:70px;font-weight:700;letter-spacing:-1px;margin-bottom:4px}
+.date{font-family:var(--mono);font-size:26px;color:var(--muted)}
+.sub2{font-size:26px;color:var(--soft);margin-top:12px}
+
+/* 持倉列 */
+.pr{display:flex;align-items:center;gap:16px;padding:11px 18px;height:54px;
+  border-radius:12px;border-bottom:1px solid rgba(200,168,148,.16);box-sizing:border-box}
+.pr:last-child{border-bottom:none}
+.pr .s{font-size:34px;font-weight:700;flex:1;white-space:nowrap;overflow:hidden}
+.pr .w{font-family:var(--mono);font-size:26px;color:var(--muted);width:120px;text-align:right}
+.pr .p{font-family:var(--mono);font-size:30px;font-weight:500;width:150px;text-align:right}
+.up{color:var(--long)}.dn{color:var(--short)}
+
+/* 大數字 */
+.big{background:var(--card);border:1px solid var(--border);border-radius:22px;padding:34px 40px;margin-bottom:18px}
+.big .lb{font-size:30px;color:var(--soft);margin-bottom:10px}
+.big .vl{font-family:var(--mono);font-size:82px;font-weight:500;letter-spacing:-2px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.foot{position:absolute;left:80px;right:80px;bottom:66px}
+.foot .line{height:1px;background:rgba(200,168,148,.35);margin-bottom:20px}
+.foot .row{display:flex;justify-content:space-between;font-size:24px;color:var(--muted)}
+</style>
+</head>
+<body>
+
+<div class="tools">
+  <button class="btn on" id="b-pos">① 本週持倉</button>
+  <button class="btn" id="b-perf">② 績效總覽</button>
+  <button class="btn" id="b-dl" style="margin-left:auto">🖼 產生圖片</button>
+</div>
+
+<div class="panel" id="panel">
+  <label><div class="lb">倉位總市值 U</div><input id="in-val" type="number" step="0.01" class="inp"/></label>
+  <label><div class="lb">未實現盈虧 U（虧損填負數）</div><input id="in-pnl" type="number" step="0.01" class="inp"/></label>
+  <label><div class="lb">第幾週</div><input id="in-week" type="number" class="inp" value="1"/></label>
+  <button class="btn" onclick="render()">套用</button>
+</div>
+
+<div class="note">
+  持倉與損益自動從系統抓；上方欄位可以手動覆蓋（例如改成你交易所的真實數字）。<br/>
+  <b>手機：</b>產生後長按圖片就能存到相簿。
+</div>
+
+<div id="out" style="display:none;max-width:1080px;margin:0 auto 24px;background:#fff;
+     border-radius:16px;padding:16px;text-align:center">
+  <div style="font-size:14px;font-weight:700;margin-bottom:6px">✅ 圖片產生完成</div>
+  <div style="font-size:13px;color:#8a6e62;margin-bottom:12px" id="out-tip"></div>
+  <img id="out-img" style="width:100%;max-width:540px;border-radius:12px;box-shadow:0 3px 14px rgba(0,0,0,.12)"/>
+</div>
+
+<div class="shot" id="shot">
+  <div class="glow g1"></div><div class="glow g2"></div>
+  <div class="inner">
+    <div class="hd">
+      <span class="tag" id="tag">動量策略</span>
+      <span class="acct">@CryptoSignal_Tony</span>
+    </div>
+    <h1 id="title">本週持倉</h1>
+    <div class="date" id="date">—</div>
+    <div class="sub2" id="sub2"></div>
+    <div id="body" style="margin-top:26px"></div>
+  </div>
+  <div class="foot">
+    <div class="line"></div>
+    <div class="row">
+      <span id="f1">動量多空策略 · 驗證中</span>
+      <span id="f2">僅供參考，非投資建議</span>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL="https://blivdibgijnpoeumfloe.supabase.co";
+const SUPABASE_KEY="sb_publishable_TVMXh4lriOqg4PVOhJ6KQw_drQ1FjcJ";
+
+let positions=[], priceMap={}, equity=[], mode="pos";
+
+async function sbGet(q){
+  try{
+    const r=await fetch(`${SUPABASE_URL}/rest/v1/${q}`,
+      {headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`}});
+    return r.ok? await r.json():null;
+  }catch(e){ return null; }
+}
+async function loadTickers(){
+  try{
+    const j=await (await fetch("https://api.bybit.com/v5/market/tickers?category=linear")).json();
+    if(j.retCode!==0) return;
+    priceMap={}; j.result.list.forEach(t=>priceMap[t.symbol]=parseFloat(t.lastPrice));
+  }catch(e){}
+}
+
+const nm=s=>s.replace("USDT","");
+const sign=n=>(n>=0?"+":"")+(+n).toFixed(2);
+const cls=n=>n>=0?"up":"dn";
+const today=()=>{const d=new Date();return d.getFullYear()+"."+String(d.getMonth()+1).padStart(2,"0")+"."+String(d.getDate()).padStart(2,"0");};
+
+async function load(){
+  const [pos] = await Promise.all([
+    sbGet("momentum_positions?select=*&order=rank.asc&limit=300"),
+    loadTickers(),
+  ]);
+  positions = pos || [];
+  equity = (await sbGet("account_equity?select=*&order=recorded_at.asc&limit=100")) || [];
+
+  // 有紀錄的話，先帶入最新一筆當預設值
+  const rows=equity.filter(e=>e.position_value_usdt!=null);
+  if(rows.length){
+    const last=rows[rows.length-1];
+    document.getElementById("in-val").value=(+last.position_value_usdt).toFixed(2);
+    document.getElementById("in-pnl").value=(+last.position_pnl_usdt).toFixed(2);
+  }
+  render();
+}
+
+// ── 持倉卡 ──
+function renderPos(){
+  const mine=positions.filter(p=>p.status==="OPEN"&&p.direction==="LONG"&&p.user_action==="DONE");
+  const list=(mine.length?mine:positions.filter(p=>p.status==="OPEN"&&p.direction==="LONG"))
+    .map(p=>{
+      const now=priceMap[p.symbol];
+      const pnl=(now&&p.entry_price>0)? (now/p.entry_price-1)*100 : null;
+      return {sym:nm(p.symbol), w:+p.user_weight||0, pnl};
+    })
+    .filter(x=>x.pnl!=null)
+    .sort((a,b)=>b.pnl-a.pnl);
+
+  document.getElementById("title").textContent="本週持倉";
+  document.getElementById("tag").textContent="動量策略";
+  document.getElementById("sub2").textContent=`${list.length} 檔多單 ｜ 每檔權重依波動反比配置`;
+  document.getElementById("f1").textContent="動量多空策略 · 公開驗證中";
+
+  if(!list.length){ document.getElementById("body").innerHTML=
+    `<div style="font-size:30px;color:var(--muted);padding:40px 0">尚無持倉資料</div>`; return; }
+
+  document.getElementById("body").innerHTML =
+    `<div class="pr" style="border:none;color:var(--muted);font-size:24px;height:44px">
+       <div class="s" style="font-size:24px;font-weight:600">幣種</div>
+       <div class="w">權重</div><div class="p">本週損益</div>
+     </div>` +
+    list.slice(0,15).map(x=>`<div class="pr">
+      <div class="s">${x.sym}</div>
+      <div class="w">${x.w.toFixed(1)}%</div>
+      <div class="p ${cls(x.pnl)}">${sign(x.pnl)}%</div>
+    </div>`).join("");
+}
+
+// ── 績效卡 ──
+function renderPerf(){
+  const val=parseFloat(document.getElementById("in-val").value);
+  const pnl=parseFloat(document.getElementById("in-pnl").value);
+  const week=document.getElementById("in-week").value||"1";
+  const cost=(val||0)-(pnl||0);
+  const pct=cost>0? pnl/cost*100 : 0;
+
+  document.getElementById("title").textContent="績效總覽";
+  document.getElementById("tag").textContent=`第 ${week} 週`;
+  document.getElementById("sub2").textContent="動量多空策略 ｜ 只做多單、輕曝險";
+  document.getElementById("f1").textContent="好的壞的，都記錄下來";
+
+  const c=pnl>=0?"up":"dn";
+  document.getElementById("body").innerHTML=`
+    <div class="big">
+      <div class="lb">報酬率</div>
+      <div class="vl ${c}">${sign(pct)}%</div>
+    </div>
+    <div class="two">
+      <div class="big" style="margin:0">
+        <div class="lb">倉位市值</div>
+        <div class="vl" style="font-size:58px">${(val||0).toFixed(1)}<span style="font-size:34px">U</span></div>
+      </div>
+      <div class="big" style="margin:0">
+        <div class="lb">未實現盈虧</div>
+        <div class="vl ${c}" style="font-size:58px">${pnl>=0?"+":""}${(pnl||0).toFixed(2)}<span style="font-size:34px">U</span></div>
+      </div>
+    </div>
+    <div style="font-size:30px;color:var(--soft);line-height:1.7;margin-top:34px">
+      這是回測出來的策略，第一次放真錢跑。<br/>
+      賺賠都會照實記錄，包含難看的。
+    </div>`;
+}
+
+function render(){
+  document.getElementById("date").textContent=today();
+  document.getElementById("panel").style.display = mode==="perf"?"flex":"none";
+  if(mode==="pos") renderPos(); else renderPerf();
+  document.getElementById("b-pos").className = mode==="pos"?"btn on":"btn";
+  document.getElementById("b-perf").className = mode==="perf"?"btn on":"btn";
+}
+
+document.getElementById("b-pos").onclick=()=>{mode="pos";render();};
+document.getElementById("b-perf").onclick=()=>{mode="perf";render();};
+
+const isMobile=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+document.getElementById("b-dl").onclick=async()=>{
+  const btn=document.getElementById("b-dl");
+  btn.textContent="產生中…"; btn.disabled=true;
+  try{
+    const el=document.getElementById("shot");
+    const keep=el.style.transform, keepMb=el.style.marginBottom;
+    el.style.transform="none"; el.style.marginBottom="24px";
+    const canvas=await html2canvas(el,{scale:1,width:1080,height:1350,
+      backgroundColor:"#fdf7f2",useCORS:true,logging:false});
+    el.style.transform=keep; el.style.marginBottom=keepMb;
+    const url=canvas.toDataURL("image/png");
+    document.getElementById("out").style.display="block";
+    document.getElementById("out-img").src=url;
+    document.getElementById("out-tip").innerHTML= isMobile
+      ? "👇 <b>長按下面的圖片</b> → 選「儲存影像」"
+      : "已自動下載。沒有的話，<b>右鍵下面的圖片</b> → 另存新檔";
+    if(!isMobile){
+      const a=document.createElement("a");
+      a.download=`perf_${mode}_${new Date().toISOString().slice(0,10)}.png`;
+      a.href=url; a.click();
+    }
+    try{ document.getElementById("out").scrollIntoView({behavior:"smooth",block:"center"}); }catch(e){}
+  }catch(e){ alert("產生失敗："+e.message); }
+  btn.textContent="🖼 產生圖片"; btn.disabled=false;
+};
+
+function fit(){
+  const el=document.getElementById("shot");
+  const w=Math.min(window.innerWidth-40,1080), s=w/1080;
+  el.style.transform=`scale(${s})`;
+  el.style.marginBottom=(1350*s-1350+24)+"px";
+}
+window.addEventListener("resize",fit);
+fit(); load();
+</script>
+</body>
+</html>
