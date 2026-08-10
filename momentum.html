@@ -160,25 +160,27 @@ header{padding:18px 0 12px;display:flex;align-items:center;justify-content:space
     </div>
     <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap">
       <label style="flex:1;min-width:130px">
-        <div class="sub" style="margin-bottom:4px">策略總價值 U</div>
+        <div class="sub" style="margin-bottom:4px" id="eq-lb">策略總價值 U</div>
         <input id="eq-val" type="number" step="0.01" class="inp" placeholder="265.4"/>
       </label>
       <label style="flex:1;min-width:120px">
-        <div class="sub" style="margin-bottom:4px">其中未實現 U（選填）</div>
-        <input id="eq-pnl" type="number" step="0.01" class="inp" placeholder="-12.3"/>
-      </label>
-      <label style="flex:1;min-width:110px">
         <div class="sub" style="margin-bottom:4px">備註（選填）</div>
+        <input id="eq-pnl" type="hidden"/>
         <input id="eq-note" type="text" class="inp" placeholder="加碼…"/>
       </label>
       <button class="act" style="padding:9px 16px" onclick="saveEquity()">記錄</button>
     </div>
+    <div style="display:flex;gap:6px;margin-top:8px">
+      <div class="act" id="m-val" onclick="setMode('val')">填總價值</div>
+      <div class="act" id="m-pnl" onclick="setMode('pnl')">填累積損益</div>
+    </div>
     <div id="eq-list" style="margin-top:8px"></div>
     <div class="hint">
-      <b>策略總價值 = 倉位市值 ＋ 這筆錢還沒進場的 USDT</b><br/>
-      只記倉位的話，每次換倉被平掉那幾檔的損益就消失了 —— 跑幾個月會完全失真。<br/>
-      總價值會自動包含已實現與未實現，換倉不會弄丟任何東西。<br/>
-      記得先在上面「資金設定」填<b>初始投入</b>，才算得出報酬率。
+      兩種填法擇一，結果一樣：<br/>
+      <b>填總價值</b> = 倉位市值 ＋ 這筆錢還沒進場的 USDT<br/>
+      <b>填累積損益</b> = 交易所盈虧日曆的總計（需先填初始投入）<br/>
+      ⚠️ 用日曆的話，先確認它<b>只算這個策略的部位</b> ——
+      如果帳戶裡還有網格或其他持倉，數字會混在一起。
     </div>
   </div>
 
@@ -432,6 +434,7 @@ function renderRebal(){
 }
 
 function render(){
+  setMode(eqMode);
   const c=document.getElementById("cfg-cap");
   if(c && document.activeElement!==c){
     c.value=CAPITAL_TWD;
@@ -579,23 +582,46 @@ async function unexclude(sym){
   }catch(e){ alert("移除失敗："+e.message); }
 }
 
-// ── 實際帳戶淨值 ──
+// ── 實際帳戶 ──
+// 兩種填法，算出來的結果一樣，看你交易所哪個數字比較好拿：
+//   val → 策略總價值（倉位市值 + 未進場的 USDT）
+//   pnl → 累積損益（例如交易所的盈虧日曆總計）
+let eqMode = localStorage.getItem("cst_eqmode") || "val";
+
+function setMode(m){
+  eqMode=m;
+  try{ localStorage.setItem("cst_eqmode",m); }catch(e){}
+  const lb=document.getElementById("eq-lb");
+  if(lb) lb.textContent = m==="val" ? "策略總價值 U" : "累積損益 U（虧損填負數）";
+  const v=document.getElementById("eq-val");
+  if(v) v.placeholder = m==="val" ? "265.4" : "-14.6";
+  const a=document.getElementById("m-val"), b=document.getElementById("m-pnl");
+  if(a) a.className = m==="val" ? "act on-done" : "act";
+  if(b) b.className = m==="pnl" ? "act on-done" : "act";
+}
+
 async function saveEquity(){
-  const val=parseFloat(document.getElementById("eq-val").value);
-  const pnlRaw=document.getElementById("eq-pnl").value.trim();
-  const pnl=pnlRaw===""?null:parseFloat(pnlRaw);
-  if(!(val>0)){ alert("請輸入策略總價值\n（倉位市值 ＋ 還沒進場的 USDT）"); return; }
-  if(pnlRaw!==""&&isNaN(pnl)){ alert("未實現盈虧請填數字，或留白"); return; }
+  const raw=parseFloat(document.getElementById("eq-val").value);
+  if(isNaN(raw)){ alert(eqMode==="val"?"請輸入策略總價值":"請輸入累積損益"); return; }
+  // 兩種填法都換算成「總價值」存進資料庫，後續計算才一致
+  let val, pnl=null;
+  if(eqMode==="val"){
+    if(!(raw>0)){ alert("策略總價值要大於 0"); return; }
+    val=raw;
+  }else{
+    if(!(INIT_USDT>0)){ alert("填累積損益之前，請先在「資金設定」填初始投入"); return; }
+    val=INIT_USDT+raw;   // 總價值 = 初始投入 + 累積損益
+    pnl=raw;
+  }
   const note=document.getElementById("eq-note").value.trim();
   try{
     await apiPost("/api/momentum/equity",{position_value_usdt:val,position_pnl_usdt:pnl,note});
     document.getElementById("eq-val").value="";
-    document.getElementById("eq-pnl").value="";
     document.getElementById("eq-note").value="";
     equity=(await sbGet("account_equity?select=*&order=recorded_at.asc&limit=200"))||[];
     renderEquity();
     const b=INIT_USDT>0?INIT_USDT:val;
-    alert("已記錄：策略總價值 "+val+"U"+(INIT_USDT>0?"（相對初始 "+((val-b)>=0?"+":"")+(val-b).toFixed(2)+"U）":""));
+    alert("已記錄　總價值 "+val.toFixed(2)+"U　損益 "+((val-b)>=0?"+":"")+(val-b).toFixed(2)+"U");
   }catch(e){ alert("記錄失敗："+e.message); }
 }
 
