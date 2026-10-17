@@ -28,6 +28,16 @@ body{font-family:'DM Sans','PingFang TC','Noto Sans TC',sans-serif;
 .lb{font-size:12px;color:var(--soft);margin-bottom:4px}
 .inp{width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:9px;
   font-size:14px;background:#fdf7f2;font-family:inherit}
+/* 手機上好打：字級放大、行高拉開、可多行 */
+.inp.big{font-size:17px;padding:13px 14px;line-height:1.6;border-radius:11px}
+textarea.inp{resize:vertical;min-height:88px}
+.btn.lg{padding:13px 26px;font-size:15px}
+.sug{font-size:15px;padding:13px 16px}
+@media(max-width:620px){
+  .inp.big{font-size:17px}
+  .panel label{min-width:100%}
+  .btn.lg{width:100%}
+}
 .tip{max-width:1080px;margin:0 auto 14px;font-size:12px;color:var(--soft);line-height:1.7}
 .stat{max-width:1080px;margin:0 auto 14px;font-family:var(--mono);font-size:12px;color:var(--soft)}
 
@@ -67,6 +77,7 @@ h1 .r{color:var(--rose)}
 .row.sm .vl{font-size:33px;min-width:160px}
 .hl{font-size:27px;font-weight:700;margin-bottom:12px}
 /* 結論卡 */
+.lead{font-size:27px;color:var(--soft);line-height:1.62;margin-bottom:26px}
 .cc{background:var(--card);border:2px solid var(--line);border-radius:18px;
   padding:26px 30px;margin-bottom:16px}
 .cc-t{font-size:33px;font-weight:700;line-height:1.35;display:flex;gap:14px;align-items:flex-start}
@@ -104,21 +115,24 @@ h1 .r{color:var(--rose)}
 
 <div class="bar">
   <button class="btn on" data-c="1">① 封面</button>
-  <button class="btn" data-c="2">② 板塊</button>
-  <button class="btn" data-c="3">③ 漲跌榜</button>
-  <button class="btn" data-c="4">④ 市場寬度</button>
-  <button class="btn" data-c="5">⑤ 情緒</button>
-  <button class="btn" data-c="6">⑥ 結論</button>
+  <button class="btn" data-c="2">② 結論</button>
+  <button class="btn" data-c="3">③ 板塊</button>
+  <button class="btn" data-c="4">④ 主流幣</button>
+  <button class="btn" data-c="5">⑤ 市場寬度</button>
+  <button class="btn" data-c="6">⑥ 情緒</button>
   <button class="btn" id="reload">↻ 重抓資料</button>
   <button class="btn" id="dl" style="margin-left:auto">🖼 產生圖片</button>
 </div>
 
 <div class="panel">
-  <label style="flex:2"><div class="lb">封面定調（你自己寫的一句話）</div>
-    <input id="i-head" class="inp" placeholder="例：漲的是指數，不是你的持倉"/></label>
-  <label><div class="lb">第幾週</div><input id="i-week" class="inp" type="number" value="1"/></label>
-  <label><div class="lb">恐慌貪婪指數（抓不到時手動填）</div><input id="i-fg" class="inp" type="number" placeholder="自動"/></label>
-  <button class="btn" id="apply">套用</button>
+  <label style="flex:1 1 100%"><div class="lb">封面定調（你自己寫的一句話，可換行）</div>
+    <textarea id="i-head" class="inp big" rows="3"
+      placeholder="例：漲的是指數，不是你的持倉"></textarea></label>
+  <label style="min-width:110px;flex:0 1 130px"><div class="lb">第幾週</div>
+    <input id="i-week" class="inp big" type="number" value="1"/></label>
+  <label style="min-width:160px"><div class="lb">恐慌貪婪指數（抓不到時手動填）</div>
+    <input id="i-fg" class="inp big" type="number" placeholder="自動"/></label>
+  <button class="btn lg" id="apply">套用</button>
 </div>
 
 <div class="panel" id="sugbox" style="display:none;flex-direction:column;align-items:stretch;gap:8px">
@@ -305,7 +319,7 @@ function sectors(){
     (m[s] = m[s] || []).push(c);
   });
   return Object.entries(m)
-    .filter(([,a])=>a.length>=3)
+    .filter(([k,a])=>k!=="其他" && a.length>=3)   // 「其他」不是板塊，不參與排名與輪動
     .map(([k,a])=>({
       name:k, n:a.length,
       w1:a.reduce((s,c)=>s+c.w1,0)/a.length,
@@ -433,7 +447,7 @@ function card2(){
           background:${pos?"var(--up)":"var(--down)"}"></i></div>
         <div class="vl ${cl(s.w1)}">${sg(s.w1)}%</div></div>`;
     }).join("")}
-    <div class="nt">各板塊成分幣的平均漲跌，括號為檔數。</div>`;
+    <div class="nt">各板塊成分幣的平均漲跌，小字為該板塊檔數。</div>`;
 }
 
 function card3(){
@@ -446,11 +460,11 @@ function card3(){
       <div class="vl ${cl(c.w1)}">${sg(c.w1)}%</div></div>`).join("");
   return `
     <div class="tag">主流幣兩端</div>
-    <h1>漲最多 / 跌最多</h1>
+    <h1>主流幣強弱</h1>
     <div class="rule" style="margin:18px 0 24px"></div>
-    <div class="hl up">漲幅前 ${k}</div>
+    <div class="hl up">本週最強 ${k} 檔</div>
     ${rows(top)}
-    <div class="hl dn" style="margin-top:20px">跌幅前 ${k}</div>
+    <div class="hl dn" style="margin-top:20px">本週最弱 ${k} 檔</div>
     ${rows(bot)}`;
 }
 
@@ -478,7 +492,13 @@ function card4(){
         ${fade.length?fade.join("、"):"無"}
       </div>
     </div>
-    <div class="nt">和上週相比，資金明顯換了位置的板塊。</div>`;
+    <div class="nt">${
+      (!flip.length && !fade.length)
+        ? "沒有板塊在正負之間翻轉，資金的分布和上週大致相同。"
+        : (d.btc.w1 < 0
+            ? "和上週相比換了位置的板塊。本週 BTC 收黑，「跑贏 BTC」包含跌得比較少的幣。"
+            : "和上週相比，資金明顯換了位置的板塊。")
+    }</div>`;
 }
 
 function card5(){
@@ -501,8 +521,9 @@ function card5(){
         <div class="v ${cl(fr)}">${fr.toFixed(3)}%</div></div>
     </div>
     <div class="nt dk">
-      資金費率為正，代表做多的人在付錢給做空的人。<br/>
-      數字越高，槓桿多單越擁擠。
+      ${fr>=0
+        ? "資金費率為正，代表做多的人在付錢給做空的人。<br/>數字越高，槓桿多單越擁擠。"
+        : "資金費率為負，代表做空的人在付錢給做多的人。<br/>數字越低，槓桿空單越擁擠。"}
     </div>
     <div class="pq">這週你是加倉、減倉，還是什麼都沒做？</div>`;
 }
@@ -544,10 +565,11 @@ function conclude(){
     `平均資金費率 ${fr.toFixed(3)}% 為負，代表做空的人在付錢，但同時 ${pUp.toFixed(0)}% 的幣上漲。空方部位正在承受成本。`]);
 
   // ③ 資金輪動 vs 離場：兩者看起來很像，但意義相反
-  if(flip.length && fade.length) R.push([7,
+  const broad = (pUp<=30 || pUp>=72);   // 寬度走極端時，輪動的說法不成立
+  if(!broad && flip.length && fade.length) R.push([7,
     "錢在換位置，不是在離場",
     `${flip[0].name}由負轉正，同時${fade[0].name}轉弱。一邊進一邊出，資金總量沒有明顯流失，屬於板塊輪動而非整體撤出。`]);
-  if(!flip.length && fade.length >= 2) R.push([7,
+  if(!broad && !flip.length && fade.length >= 2) R.push([7,
     "沒有接棒的板塊",
     `${fade.slice(0,2).map(s=>s.name).join("、")}都從正轉負，而沒有任何板塊由負轉正。資金離開了，但沒有出現新的去處。`]);
 
@@ -606,10 +628,8 @@ function conclude(){
 
   R.sort((a,b)=>b[0]-a[0]);
   const items = R.slice(0,3);
-
-  // 一句話總結：用最高分的那條推出來，不另外造句
-  const summary = items[0][1];
-  return { summary, items };
+  // 最強的那條升格為標題與導言，列點只放其餘兩條，避免標題和第 1 點重複
+  return { summary: items[0][1], lead: items[0][2], items: items.slice(1) };
 }
 
 function card6(){
@@ -617,7 +637,8 @@ function card6(){
   return `
     <div class="tag">本週結論</div>
     <h1 style="font-size:54px">${c.summary}</h1>
-    <div class="rule" style="margin:20px 0 28px"></div>
+    <div class="rule" style="margin:20px 0 22px"></div>
+    <div class="lead">${c.lead}</div>
     ${c.items.map((it,i)=>`
       <div class="cc">
         <div class="cc-t"><span class="cc-n">${i+1}</span>${it[1]}</div>
@@ -627,14 +648,14 @@ function card6(){
       以上是從數據推出的觀察，不是預測，也不是買賣建議。</div>`;
 }
 
-const CARDS = [card1, card2, card3, card4, card5, card6];
+const CARDS = [card1, card6, card2, card3, card4, card5];
 
 function render(){
   if(!DATA){ $("body").innerHTML = `<h1>載入中…</h1>`; return; }
   $("h-l").textContent = `幣圈週報 ・ 第 ${$("i-week").value||1} 週`;
   $("h-r").textContent = `${page} / 6`;
   const nMaj = DATA.coins.filter(c=>IS_MAJOR.has(c.name)).length;
-  $("f-r").textContent = (page===3)
+  $("f-r").textContent = (CARDS[page-1] === card3)
     ? `${nMaj} 檔主流幣 ・ 不含槓桿商品 ・ ${dateRange()}`
     : `資料來源 Bybit ・ ${DATA.coins.length} 檔 ・ ${dateRange()}`;
   $("body").innerHTML = CARDS[page-1]();
