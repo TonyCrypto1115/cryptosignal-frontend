@@ -61,6 +61,11 @@ h1 .r{color:var(--rose)}
 .row .sub{font-size:22px;color:var(--muted);margin-left:8px;font-weight:400}
 .row .vl{font-family:var(--mono);font-size:38px;font-weight:500;min-width:170px;text-align:right}
 .up{color:var(--up)}.dn{color:var(--down)}.fl{color:var(--muted)}
+/* 緊湊列：一張卡要塞 10 列時用 */
+.row.sm{height:66px;margin-bottom:10px;padding:0 28px}
+.row.sm .nm{font-size:30px}
+.row.sm .vl{font-size:33px;min-width:160px}
+.hl{font-size:27px;font-weight:700;margin-bottom:12px}
 
 /* 條狀圖 */
 .bar2{height:14px;border-radius:7px;background:rgba(200,168,148,.22);
@@ -157,6 +162,31 @@ const SECTOR = {
 const SECTOR_OF = {};
 Object.entries(SECTOR).forEach(([k,arr])=>arr.forEach(s=>{ if(!SECTOR_OF[s]) SECTOR_OF[s]=k; }));
 
+// ══════════════════════════════════════════════════════════
+//  主流幣 —— 第三張「漲跌榜」只看這些。
+//  想加減直接改這個陣列。
+// ══════════════════════════════════════════════════════════
+const MAJORS = ["BTC","ETH","SOL","BNB","XRP","ADA","DOGE","AVAX","TRX","DOT",
+  "LINK","LTC","BCH","UNI","AAVE","ATOM","NEAR","APT","SUI","TON",
+  "SHIB","PEPE","ARB","OP","FIL","ETC","XLM","HBAR","ICP","INJ",
+  "TIA","RENDER","FET","LDO","ONDO","JUP","ENA","WIF","STX","SEI"];
+const IS_MAJOR = new Set(MAJORS);
+
+// ══════════════════════════════════════════════════════════
+//  排除非加密商品。
+//  Bybit 上有代幣化美股與槓桿 ETF 合約（SOXL / SOXS / KORU / SNXX …），
+//  它們會污染板塊與寬度統計，一律剔除。
+// ══════════════════════════════════════════════════════════
+const EXCLUDE = new Set([
+  "SOXL","SOXS","SNXX","KORU","TSLL","TSLQ","NVDL","NVDS","CONL","MSTX","MSTZ",
+  "FNGU","FNGD","TQQQ","SQQQ","SPXL","SPXS","LABU","LABD","YINN","YANG",
+  "GDXU","GDXD","BOIL","KOLD","UVXY","SVXY","TMF","TMV",
+  "TSLA","NVDA","AAPL","MSFT","META","AMZN","GOOGL","COIN","MSTR","HOOD",
+  "XAUT","PAXG","USDC","USDE","FDUSD","TUSD","DAI","USDT",
+]);
+// 另外這些字樣出現在幣名裡，通常也是槓桿或合成商品
+const EXCLUDE_PAT = /(\d+L$|\d+S$|BULL$|BEAR$|UP$|DOWN$|^X[A-Z]{2,}\d)/;
+
 const MIN_TURNOVER = 3_000_000;   // 24h 成交額門檻，濾掉沒流動性的
 const MAX_COINS    = 90;          // 取成交額前 N 名
 
@@ -182,15 +212,17 @@ async function loadData(){
   let universe = tj.result.list
     .filter(t=>t.symbol.endsWith("USDT"))
     .filter(t=>parseFloat(t.turnover24h||0) >= MIN_TURNOVER)
-    .sort((a,b)=>parseFloat(b.turnover24h)-parseFloat(a.turnover24h))
-    .slice(0, MAX_COINS)
     .map(t=>({
       symbol: t.symbol,
       name:   t.symbol.replace("USDT",""),
       price:  parseFloat(t.lastPrice),
       turnover: parseFloat(t.turnover24h),
       funding: parseFloat(t.fundingRate||0),
-    }));
+    }))
+    // 剔除代幣化美股、槓桿 ETF、穩定幣
+    .filter(c => !EXCLUDE.has(c.name) && !EXCLUDE_PAT.test(c.name))
+    .sort((a,b)=>b.turnover-a.turnover)
+    .slice(0, MAX_COINS);
 
   // 本週一到今天。週一當天開這份報表的話，改用剛結束的那一整週。
   const dow  = new Date().getDay();        // 0=日 1=一 … 6=六
@@ -378,7 +410,7 @@ function card1(){
 }
 
 function card2(){
-  const list = sectors().slice(0,7);
+  const list = sectors().slice(0,6);
   const mx = Math.max(...list.map(s=>Math.abs(s.w1)), 1);
   return `
     <div class="tag">錢流到哪裡去了</div>
@@ -396,18 +428,20 @@ function card2(){
 }
 
 function card3(){
-  const s = DATA.coins.slice().sort((a,b)=>b.w1-a.w1);
-  const top = s.slice(0,5), bot = s.slice(-5).reverse();
-  const rows = a => a.map(c=>`<div class="row" style="height:84px">
+  // 只看主流幣：小幣的 +130% 對讀者沒有參考價值，而且會蓋掉真正的訊息
+  const s = DATA.coins.filter(c=>IS_MAJOR.has(c.name)).sort((a,b)=>b.w1-a.w1);
+  const k = Math.min(5, Math.floor(s.length/2));
+  const top = s.slice(0,k), bot = s.slice(-k).reverse();
+  const rows = a => a.map(c=>`<div class="row sm">
       <div class="nm">${c.name}</div>
       <div class="vl ${cl(c.w1)}">${sg(c.w1)}%</div></div>`).join("");
   return `
-    <div class="tag">本週兩端</div>
+    <div class="tag">主流幣兩端</div>
     <h1>漲最多 / 跌最多</h1>
-    <div class="rule" style="margin-bottom:26px"></div>
-    <div style="font-size:28px;color:var(--up);font-weight:700;margin-bottom:14px">漲幅前五</div>
+    <div class="rule" style="margin:18px 0 24px"></div>
+    <div class="hl up">漲幅前 ${k}</div>
     ${rows(top)}
-    <div style="font-size:28px;color:var(--down);font-weight:700;margin:24px 0 14px">跌幅前五</div>
+    <div class="hl dn" style="margin-top:20px">跌幅前 ${k}</div>
     ${rows(bot)}`;
 }
 
@@ -470,7 +504,10 @@ function render(){
   if(!DATA){ $("body").innerHTML = `<h1>載入中…</h1>`; return; }
   $("h-l").textContent = `幣圈週報 ・ 第 ${$("i-week").value||1} 週`;
   $("h-r").textContent = `${page} / 5`;
-  $("f-r").textContent = `資料來源 Bybit ・ ${DATA.coins.length} 檔 ・ ${dateRange()}`;
+  const nMaj = DATA.coins.filter(c=>IS_MAJOR.has(c.name)).length;
+  $("f-r").textContent = (page===3)
+    ? `${nMaj} 檔主流幣 ・ 不含槓桿商品 ・ ${dateRange()}`
+    : `資料來源 Bybit ・ ${DATA.coins.length} 檔 ・ ${dateRange()}`;
   $("body").innerHTML = CARDS[page-1]();
   document.querySelectorAll("[data-c]").forEach(b=>
     b.className = (+b.dataset.c===page) ? "btn on" : "btn");
