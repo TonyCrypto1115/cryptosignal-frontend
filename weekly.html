@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>幣圈週報圖卡｜CryptoSignal Tony</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+:root{
+  --bg:#fdf7f2;--card:#fff;--border:rgba(200,168,148,.18);
+  --text:#221a16;--soft:#8a6e62;--muted:#c4a898;
+  --coral:#e06050;--rose:#c8506a;--up:#28a870;--down:#e04858;
+  --line:#e8d6ca;--mono:'DM Mono',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans','PingFang TC','Noto Sans TC',sans-serif;
+  background:#efe6de;color:var(--text);padding:20px}
+
+.bar{max-width:1080px;margin:0 auto 12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{padding:9px 16px;border-radius:20px;border:1px solid var(--border);background:#fff;
+  color:var(--text);font-size:13px;font-weight:600;cursor:pointer}
+.btn.on{background:var(--coral);color:#fff;border-color:var(--coral)}
+.btn:disabled{opacity:.5;cursor:default}
+.panel{max-width:1080px;margin:0 auto 14px;background:#fff;border-radius:14px;padding:14px;
+  display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+.panel label{flex:1;min-width:160px}
+.lb{font-size:12px;color:var(--soft);margin-bottom:4px}
+.inp{width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:9px;
+  font-size:14px;background:#fdf7f2;font-family:inherit}
+.tip{max-width:1080px;margin:0 auto 14px;font-size:12px;color:var(--soft);line-height:1.7}
+.stat{max-width:1080px;margin:0 auto 14px;font-family:var(--mono);font-size:12px;color:var(--soft)}
+
+/* ── 圖卡 ── */
+.shot{width:1080px;height:1350px;background:var(--bg);position:relative;overflow:hidden;
+  margin:0 auto 24px;transform-origin:top left}
+.glow{position:absolute;border-radius:50%}
+.g1{width:780px;height:780px;left:-390px;top:-390px;background:rgba(224,96,80,.05)}
+.g2{width:700px;height:700px;right:-350px;top:-233px;background:rgba(200,80,106,.05)}
+.inner{position:relative;padding:80px}
+.hd{display:flex;justify-content:space-between;font-size:25px;color:var(--muted);margin-bottom:34px}
+.tag{display:inline-block;background:var(--coral);color:#fff;font-size:24px;font-weight:700;
+  padding:9px 17px;border-radius:14px;margin-bottom:26px}
+h1{font-size:62px;font-weight:700;letter-spacing:-1px;line-height:1.3}
+h1 .c{color:var(--coral)}
+h1 .r{color:var(--rose)}
+.rule{width:190px;height:6px;background:var(--coral);border-radius:3px;margin:22px 0 34px}
+.bx{background:var(--card);border:2px solid var(--line);border-radius:22px;padding:44px 36px}
+.bx.t{font-size:38px;font-weight:700;line-height:1.55}
+.nt{font-size:34px;color:var(--soft);line-height:1.5;margin-top:34px}
+.nt.dk{color:var(--text)}
+.pq{font-size:38px;font-weight:700;color:var(--coral);line-height:1.45;margin-top:30px}
+.ft{position:absolute;left:80px;right:80px;bottom:70px}
+.ft .ln{height:2px;background:var(--line);margin-bottom:20px}
+.ft .rw{display:flex;justify-content:space-between;font-size:24px;color:var(--muted)}
+
+/* 資料列 */
+.row{display:flex;align-items:center;gap:14px;background:var(--card);
+  border:2px solid var(--line);border-radius:16px;padding:0 30px;height:96px;margin-bottom:16px}
+.row .nm{font-size:33px;font-weight:600;flex:1;white-space:nowrap}
+.row .sub{font-size:22px;color:var(--muted);margin-left:8px;font-weight:400}
+.row .vl{font-family:var(--mono);font-size:38px;font-weight:500;min-width:170px;text-align:right}
+.up{color:var(--up)}.dn{color:var(--down)}.fl{color:var(--muted)}
+
+/* 條狀圖 */
+.bar2{height:14px;border-radius:7px;background:rgba(200,168,148,.22);
+  flex:1;position:relative;overflow:hidden;margin:0 6px}
+.bar2 i{position:absolute;top:0;bottom:0;border-radius:7px}
+
+/* 大數字 */
+.big{background:var(--card);border:2px solid var(--line);border-radius:22px;
+  padding:32px 36px;margin-bottom:18px}
+.big .l{font-size:29px;color:var(--soft);margin-bottom:10px}
+.big .v{font-family:var(--mono);font-size:72px;font-weight:500;letter-spacing:-2px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.two .big{margin:0}
+.two .v{font-size:56px}
+
+#out{display:none;max-width:1080px;margin:0 auto 24px;background:#fff;
+  border-radius:16px;padding:16px;text-align:center}
+#out img{width:100%;max-width:520px;border-radius:12px;margin-top:8px;
+  box-shadow:0 3px 14px rgba(0,0,0,.12)}
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <button class="btn on" data-c="1">① 封面</button>
+  <button class="btn" data-c="2">② 板塊</button>
+  <button class="btn" data-c="3">③ 漲跌榜</button>
+  <button class="btn" data-c="4">④ 市場寬度</button>
+  <button class="btn" data-c="5">⑤ 情緒</button>
+  <button class="btn" id="reload">↻ 重抓資料</button>
+  <button class="btn" id="dl" style="margin-left:auto">🖼 產生圖片</button>
+</div>
+
+<div class="panel">
+  <label style="flex:2"><div class="lb">封面定調（你自己寫的一句話）</div>
+    <input id="i-head" class="inp" placeholder="例：漲的是指數，不是你的持倉"/></label>
+  <label><div class="lb">第幾週</div><input id="i-week" class="inp" type="number" value="1"/></label>
+  <label><div class="lb">恐慌貪婪指數（抓不到時手動填）</div><input id="i-fg" class="inp" type="number" placeholder="自動"/></label>
+  <button class="btn" id="apply">套用</button>
+</div>
+
+<div class="tip">
+  資料自動從 Bybit 抓取，統計過去 7 天漲跌。第一次載入約需 20–40 秒。<br/>
+  <b>手機：</b>產生後長按圖片即可存到相簿。切換上方分頁可逐張產生。
+</div>
+<div class="stat" id="stat">準備中…</div>
+
+<div id="out">
+  <div style="font-size:14px;font-weight:700">✅ 圖片產生完成</div>
+  <div style="font-size:13px;color:#8a6e62;margin-top:4px" id="out-tip"></div>
+  <img id="out-img"/>
+</div>
+
+<div class="shot" id="shot">
+  <div class="glow g1"></div><div class="glow g2"></div>
+  <div class="inner">
+    <div class="hd"><span id="h-l">幣圈週報</span><span id="h-r">1 / 5</span></div>
+    <div id="body"></div>
+  </div>
+  <div class="ft">
+    <div class="ln"></div>
+    <div class="rw">
+      <span>@CryptoSignal_Tony</span>
+      <span id="f-r">資料來源 Bybit</span>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+//  板塊分類。沒列到的幣會歸入「其他」。
+//  想調整分類，直接改這張表即可。
+// ══════════════════════════════════════════════════════════
+const SECTOR = {
+  "公鏈 L1":["BTC","ETH","SOL","BNB","ADA","AVAX","TRX","DOT","NEAR","APT","SUI","ATOM","TON","ICP","ALGO","HBAR","SEI","INJ","TIA","KAS","XLM","XRP","LTC","BCH","ETC","FIL"],
+  "L2 / 擴容":["ARB","OP","MATIC","STRK","ZK","MANTA","METIS","IMX","BLAST","SCR"],
+  "DeFi":["UNI","AAVE","LINK","MKR","CRV","LDO","PENDLE","ENA","JUP","RAY","CAKE","COMP","SNX","DYDX","GMX","SUSHI","1INCH","ETHFI"],
+  "迷因幣":["DOGE","SHIB","PEPE","WIF","BONK","FLOKI","BOME","MEME","POPCAT","MEW","NEIRO","TURBO","PNUT","ACT","GOAT","SPX","FARTCOIN"],
+  "AI / DePIN":["FET","RENDER","TAO","AR","GRT","AKT","WLD","ARKM","AI","IO","NOS","THETA","RNDR","VIRTUAL","AIXBT","GRASS"],
+  "RWA / 支付":["ONDO","POLYX","CFG","PENDLE","XDC","QNT","OM","PAXG"],
+  "遊戲 / 社交":["SAND","MANA","AXS","GALA","APE","ENJ","PIXEL","BIGTIME","YGG","GMT","NOT","HMSTR"],
+  "交易所幣":["OKB","CRO","KCS","GT","HT","MX","BGB"],
+};
+const SECTOR_OF = {};
+Object.entries(SECTOR).forEach(([k,arr])=>arr.forEach(s=>{ if(!SECTOR_OF[s]) SECTOR_OF[s]=k; }));
+
+const MIN_TURNOVER = 3_000_000;   // 24h 成交額門檻，濾掉沒流動性的
+const MAX_COINS    = 90;          // 取成交額前 N 名
+
+let DATA = null, page = 1;
+
+const $  = id => document.getElementById(id);
+const sg = n => (n>=0?"+":"") + n.toFixed(2);
+const cl = n => n>0?"up":(n<0?"dn":"fl");
+
+async function jget(url){
+  const r = await fetch(url);
+  if(!r.ok) throw new Error("HTTP "+r.status);
+  return r.json();
+}
+
+// ── 抓資料 ────────────────────────────────────────────────
+async function loadData(){
+  $("stat").textContent = "抓取行情中…";
+
+  const tj = await jget("https://api.bybit.com/v5/market/tickers?category=linear");
+  if(tj.retCode!==0) throw new Error("Bybit tickers 失敗");
+
+  let universe = tj.result.list
+    .filter(t=>t.symbol.endsWith("USDT"))
+    .filter(t=>parseFloat(t.turnover24h||0) >= MIN_TURNOVER)
+    .sort((a,b)=>parseFloat(b.turnover24h)-parseFloat(a.turnover24h))
+    .slice(0, MAX_COINS)
+    .map(t=>({
+      symbol: t.symbol,
+      name:   t.symbol.replace("USDT",""),
+      price:  parseFloat(t.lastPrice),
+      turnover: parseFloat(t.turnover24h),
+      funding: parseFloat(t.fundingRate||0),
+    }));
+
+  // 逐檔抓日線（併發 6，對 API 客氣一點）
+  const out = [];
+  let done = 0;
+  async function worker(queue){
+    while(queue.length){
+      const c = queue.shift();
+      try{
+        const kj = await jget(
+          `https://api.bybit.com/v5/market/kline?category=linear&symbol=${c.symbol}&interval=D&limit=16`);
+        if(kj.retCode===0 && kj.result?.list?.length>=15){
+          const k = kj.result.list.slice().reverse();          // 舊→新
+          const close = k.map(x=>parseFloat(x[4]));
+          const n = close.length;
+          const w1 = (close[n-1]/close[n-8]-1)*100;            // 本週
+          const w0 = (close[n-8]/close[n-15]-1)*100;           // 上週
+          if(isFinite(w1) && isFinite(w0)) out.push({...c, w1, w0});
+        }
+      }catch(e){}
+      done++;
+      if(done%10===0) $("stat").textContent = `抓取 K 線中… ${done}/${universe.length}`;
+    }
+  }
+  const q = universe.slice();
+  await Promise.all([1,2,3,4,5,6].map(()=>worker(q)));
+
+  // 恐慌貪婪（抓不到就留空，可手動填）
+  let fg = null;
+  try{
+    const fj = await jget("https://api.alternative.me/fng/?limit=2");
+    fg = { now:+fj.data[0].value, prev:+fj.data[1].value, label:fj.data[0].value_classification };
+  }catch(e){}
+
+  const btc = out.find(c=>c.name==="BTC");
+  DATA = {
+    coins: out,
+    btc,
+    fg,
+    upCount:   out.filter(c=>c.w1>0).length,
+    beatBtc:   btc ? out.filter(c=>c.w1>btc.w1).length : 0,
+    avgFunding: out.reduce((s,c)=>s+c.funding,0)/out.length*100,
+    at: new Date(),
+  };
+  $("stat").textContent =
+    `✅ ${out.length} 檔 ・ ${DATA.at.toLocaleString("zh-TW")} ・ 統計區間：過去 7 天`;
+}
+
+// ── 板塊彙總 ──────────────────────────────────────────────
+function sectors(){
+  const m = {};
+  DATA.coins.forEach(c=>{
+    const s = SECTOR_OF[c.name] || "其他";
+    (m[s] = m[s] || []).push(c);
+  });
+  return Object.entries(m)
+    .filter(([,a])=>a.length>=3)
+    .map(([k,a])=>({
+      name:k, n:a.length,
+      w1:a.reduce((s,c)=>s+c.w1,0)/a.length,
+      w0:a.reduce((s,c)=>s+c.w0,0)/a.length,
+    }))
+    .sort((a,b)=>b.w1-a.w1);
+}
+
+const dateRange = ()=>{
+  const e = new Date(), s = new Date(Date.now()-6*864e5);
+  const f = d => `${d.getMonth()+1}/${d.getDate()}`;
+  return `${f(s)} – ${f(e)}`;
+};
+
+// ── 五張卡 ────────────────────────────────────────────────
+function card1(){
+  const d = DATA, pct = d.upCount/d.coins.length*100;
+  const head = $("i-head").value.trim();
+  const auto = pct<50
+    ? `指數在漲，<br/>但<span class="c">${(100-pct).toFixed(0)}% 的幣在跌</span>`
+    : `<span class="c">${pct.toFixed(0)}% 的幣</span>在漲，<br/>這週雨露均霑`;
+  return `
+    <div class="tag">本週 ${dateRange()}</div>
+    <h1>${head ? head.replace(/\n/g,"<br/>") : auto}</h1>
+    <div class="rule"></div>
+    <div class="two" style="margin-bottom:18px">
+      <div class="big"><div class="l">BTC 本週</div>
+        <div class="v ${cl(d.btc.w1)}">${sg(d.btc.w1)}%</div></div>
+      <div class="big"><div class="l">上漲家數</div>
+        <div class="v">${d.upCount}<span style="font-size:32px;color:var(--muted)">/${d.coins.length}</span></div></div>
+    </div>
+    <div class="nt">追蹤 ${d.coins.length} 檔主要合約，統計過去 7 天。</div>`;
+}
+
+function card2(){
+  const list = sectors().slice(0,7);
+  const mx = Math.max(...list.map(s=>Math.abs(s.w1)), 1);
+  return `
+    <div class="tag">錢流到哪裡去了</div>
+    <h1>板塊表現</h1>
+    <div class="rule"></div>
+    ${list.map(s=>{
+      const w = Math.abs(s.w1)/mx*100, pos = s.w1>=0;
+      return `<div class="row">
+        <div class="nm">${s.name}<span class="sub">${s.n}</span></div>
+        <div class="bar2"><i style="${pos?"left:50%":"right:50%"};width:${w/2}%;
+          background:${pos?"var(--up)":"var(--down)"}"></i></div>
+        <div class="vl ${cl(s.w1)}">${sg(s.w1)}%</div></div>`;
+    }).join("")}
+    <div class="nt">各板塊成分幣的平均漲跌，括號為檔數。</div>`;
+}
+
+function card3(){
+  const s = DATA.coins.slice().sort((a,b)=>b.w1-a.w1);
+  const top = s.slice(0,5), bot = s.slice(-5).reverse();
+  const rows = a => a.map(c=>`<div class="row" style="height:84px">
+      <div class="nm">${c.name}</div>
+      <div class="vl ${cl(c.w1)}">${sg(c.w1)}%</div></div>`).join("");
+  return `
+    <div class="tag">本週兩端</div>
+    <h1>漲最多 / 跌最多</h1>
+    <div class="rule" style="margin-bottom:26px"></div>
+    <div style="font-size:28px;color:var(--up);font-weight:700;margin-bottom:14px">漲幅前五</div>
+    ${rows(top)}
+    <div style="font-size:28px;color:var(--down);font-weight:700;margin:24px 0 14px">跌幅前五</div>
+    ${rows(bot)}`;
+}
+
+function card4(){
+  const d = DATA, n = d.coins.length;
+  const pUp = d.upCount/n*100, pBeat = d.beatBtc/n*100;
+  const sec = sectors();
+  const flip = sec.filter(s=>s.w0<0 && s.w1>0).map(s=>s.name);
+  const fade = sec.filter(s=>s.w0>0 && s.w1<0).map(s=>s.name);
+  return `
+    <div class="tag">市場寬度</div>
+    <h1>漲跌幅騙人，<br/><span class="c">寬度不會</span></h1>
+    <div class="rule"></div>
+    <div class="two" style="margin-bottom:18px">
+      <div class="big"><div class="l">上漲比例</div>
+        <div class="v ${pUp>=50?"up":"dn"}">${pUp.toFixed(0)}%</div></div>
+      <div class="big"><div class="l">跑贏 BTC 比例</div>
+        <div class="v ${pBeat>=50?"up":"dn"}">${pBeat.toFixed(0)}%</div></div>
+    </div>
+    <div class="bx" style="padding:34px 36px">
+      <div style="font-size:30px;line-height:1.75">
+        <span style="color:var(--up);font-weight:700">本週翻正：</span>
+        ${flip.length?flip.join("、"):"無"}<br/>
+        <span style="color:var(--down);font-weight:700">本週轉弱：</span>
+        ${fade.length?fade.join("、"):"無"}
+      </div>
+    </div>
+    <div class="nt">和上週相比，資金明顯換了位置的板塊。</div>`;
+}
+
+function card5(){
+  const d = DATA;
+  const manual = parseFloat($("i-fg").value);
+  const fg = isFinite(manual) ? {now:manual, prev:null} : d.fg;
+  const fgTxt = fg ? `${fg.now}` : "—";
+  const fgDiff = (fg && fg.prev!=null)
+    ? `<span class="${cl(fg.now-fg.prev)}" style="font-size:30px">（上週 ${fg.prev}）</span>` : "";
+  const fr = d.avgFunding;
+  return `
+    <div class="tag">情緒與資金</div>
+    <h1>市場現在<br/><span class="c">在想什麼</span></h1>
+    <div class="rule"></div>
+    <div class="two" style="margin-bottom:18px">
+      <div class="big"><div class="l">恐慌貪婪指數</div>
+        <div class="v">${fgTxt}</div>
+        <div style="margin-top:6px;color:var(--muted);font-size:26px">${fgDiff}</div></div>
+      <div class="big"><div class="l">平均資金費率</div>
+        <div class="v ${cl(fr)}">${fr.toFixed(3)}%</div></div>
+    </div>
+    <div class="nt dk">
+      資金費率為正，代表做多的人在付錢給做空的人。<br/>
+      數字越高，槓桿多單越擁擠。
+    </div>
+    <div class="pq">這週你是加倉、減倉，還是什麼都沒做？</div>`;
+}
+
+const CARDS = [card1, card2, card3, card4, card5];
+
+function render(){
+  if(!DATA){ $("body").innerHTML = `<h1>載入中…</h1>`; return; }
+  $("h-l").textContent = `幣圈週報 ・ 第 ${$("i-week").value||1} 週`;
+  $("h-r").textContent = `${page} / 5`;
+  $("f-r").textContent = `資料來源 Bybit ・ ${DATA.coins.length} 檔 ・ 過去 7 天`;
+  $("body").innerHTML = CARDS[page-1]();
+  document.querySelectorAll("[data-c]").forEach(b=>
+    b.className = (+b.dataset.c===page) ? "btn on" : "btn");
+}
+
+document.querySelectorAll("[data-c]").forEach(b=>
+  b.onclick = ()=>{ page = +b.dataset.c; render(); });
+$("apply").onclick = render;
+$("reload").onclick = async ()=>{
+  try{ await loadData(); render(); }catch(e){ $("stat").textContent="❌ "+e.message; }
+};
+
+// ── 產圖 ──────────────────────────────────────────────────
+const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+$("dl").onclick = async ()=>{
+  const b = $("dl"); b.textContent="產生中…"; b.disabled=true;
+  try{
+    const el = $("shot");
+    const keepT = el.style.transform, keepM = el.style.marginBottom;
+    el.style.transform="none"; el.style.marginBottom="24px";
+    const cv = await html2canvas(el,{scale:1,width:1080,height:1350,
+      backgroundColor:"#fdf7f2",useCORS:true,logging:false});
+    el.style.transform=keepT; el.style.marginBottom=keepM;
+    const url = cv.toDataURL("image/png");
+    $("out").style.display="block";
+    $("out-img").src = url;
+    $("out-tip").innerHTML = isMobile
+      ? "👇 <b>長按下面的圖片</b> → 儲存影像"
+      : "已自動下載。沒有的話，<b>右鍵圖片</b> → 另存新檔";
+    if(!isMobile){
+      const a=document.createElement("a");
+      a.download=`weekly_${page}_${new Date().toISOString().slice(0,10)}.png`;
+      a.href=url; a.click();
+    }
+    $("out").scrollIntoView({behavior:"smooth",block:"center"});
+  }catch(e){ alert("產生失敗："+e.message); }
+  b.textContent="🖼 產生圖片"; b.disabled=false;
+};
+
+function fit(){
+  const el=$("shot"), w=Math.min(window.innerWidth-40,1080), s=w/1080;
+  el.style.transform=`scale(${s})`;
+  el.style.marginBottom=(1350*s-1350+24)+"px";
+}
+window.addEventListener("resize",fit);
+fit();
+loadData().then(render).catch(e=>{ $("stat").textContent="❌ "+e.message; });
+</script>
+</body>
+</html>
