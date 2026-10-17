@@ -173,14 +173,28 @@ h1 .r{color:var(--rose)}
 //  想調整分類，直接改這張表即可。
 // ══════════════════════════════════════════════════════════
 const SECTOR = {
-  "公鏈 L1":["BTC","ETH","SOL","BNB","ADA","AVAX","TRX","DOT","NEAR","APT","SUI","ATOM","TON","ICP","ALGO","HBAR","SEI","INJ","TIA","KAS","XLM","XRP","LTC","BCH","ETC","FIL"],
-  "L2 / 擴容":["ARB","OP","MATIC","STRK","ZK","MANTA","METIS","IMX","BLAST","SCR"],
-  "DeFi":["UNI","AAVE","LINK","MKR","CRV","LDO","PENDLE","ENA","JUP","RAY","CAKE","COMP","SNX","DYDX","GMX","SUSHI","1INCH","ETHFI"],
-  "迷因幣":["DOGE","SHIB","PEPE","WIF","BONK","FLOKI","BOME","MEME","POPCAT","MEW","NEIRO","TURBO","PNUT","ACT","GOAT","SPX","FARTCOIN"],
-  "AI / DePIN":["FET","RENDER","TAO","AR","GRT","AKT","WLD","ARKM","AI","IO","NOS","THETA","RNDR","VIRTUAL","AIXBT","GRASS"],
-  "RWA / 支付":["ONDO","POLYX","CFG","PENDLE","XDC","QNT","OM","PAXG"],
-  "遊戲 / 社交":["SAND","MANA","AXS","GALA","APE","ENJ","PIXEL","BIGTIME","YGG","GMT","NOT","HMSTR"],
-  "交易所幣":["OKB","CRO","KCS","GT","HT","MX","BGB"],
+  "公鏈 L1":["BTC","ETH","SOL","BNB","ADA","AVAX","TRX","DOT","NEAR","APT","SUI","ATOM",
+    "TON","ICP","ALGO","HBAR","SEI","INJ","TIA","KAS","XLM","XRP","LTC","BCH","ETC","FIL",
+    "EOS","XTZ","EGLD","FLOW","MINA","ROSE","ONE","CELO","KAVA","ZIL","QTUM","WAVES","IOTA",
+    "NEO","VET","CFX","KLAY","ASTR","CORE","BERA","MOVE","S","SOPH","PLUME","MON","HYPE"],
+  "L2 / 擴容":["ARB","OP","MATIC","POL","STRK","ZK","MANTA","METIS","IMX","BLAST","SCR",
+    "LRC","SKL","ZRO","TAIKO","MODE","LINEA","MERL","BOBA","OMNI"],
+  "DeFi":["UNI","AAVE","LINK","MKR","CRV","LDO","PENDLE","ENA","JUP","RAY","CAKE","COMP",
+    "SNX","DYDX","GMX","SUSHI","1INCH","ETHFI","EIGEN","REZ","SAFE","BAL","YFI","RUNE",
+    "OSMO","JTO","DRIFT","HYPER","MORPHO","AERO","VELO","SYRUP","FLUID","SPK","KMNO"],
+  "迷因幣":["DOGE","SHIB","PEPE","WIF","BONK","FLOKI","BOME","MEME","POPCAT","MEW","NEIRO",
+    "TURBO","PNUT","ACT","GOAT","SPX","FARTCOIN","BRETT","MOG","DOGS","CAT","PEOPLE",
+    "BABYDOGE","TRUMP","MELANIA","CHILLGUY","MOODENG","HIPPO","SLERF","MYRO","WEN","PUMP",
+    "USELESS","TROLL","LAUNCHCOIN","HOUSE","AI16Z","GIGA","BAN","ZEREBRO"],
+  "AI / DePIN":["FET","RENDER","TAO","AR","GRT","AKT","WLD","ARKM","AI","IO","NOS","THETA",
+    "RNDR","VIRTUAL","AIXBT","GRASS","HNT","MOBILE","IOTX","OCEAN","AGIX","PHB","CTXC",
+    "NMR","RSS3","ATH","SAHARA","PROMPT","CODEX","OPEN","KITE"],
+  "RWA / 支付":["ONDO","POLYX","CFG","XDC","QNT","OM","PYTH","LINK","CHZ","ACH","XAI",
+    "RSR","TRU","CPOOL","PROPS","HOME","USUAL","RLC"],
+  "遊戲 / 社交":["SAND","MANA","AXS","GALA","APE","ENJ","PIXEL","BIGTIME","YGG","GMT","NOT",
+    "HMSTR","CATI","MAVIA","PRIME","MAGIC","ILV","ALICE","TLM","SLP","VOXEL","NFP",
+    "PORTAL","ACE","XAI","BLUR","LOOKS","FRIEND","GRASS"],
+  "交易所幣":["OKB","CRO","KCS","GT","HT","MX","BGB","BNX","WOO","FTT","LEO"],
 };
 const SECTOR_OF = {};
 Object.entries(SECTOR).forEach(([k,arr])=>arr.forEach(s=>{ if(!SECTOR_OF[s]) SECTOR_OF[s]=k; }));
@@ -447,7 +461,8 @@ function card2(){
           background:${pos?"var(--up)":"var(--down)"}"></i></div>
         <div class="vl ${cl(s.w1)}">${sg(s.w1)}%</div></div>`;
     }).join("")}
-    <div class="nt">各板塊成分幣的平均漲跌，小字為該板塊檔數。</div>`;
+    <div class="nt">各板塊成分幣的平均漲跌，小字為該板塊檔數。<br/>
+      本張涵蓋 ${list.reduce((a,x)=>a+x.n,0)} / ${DATA.coins.length} 檔，未分類者不計入。</div>`;
 }
 
 function card3(){
@@ -495,10 +510,12 @@ function card4(){
     <div class="nt">${
       (!flip.length && !fade.length)
         ? "沒有板塊在正負之間翻轉，資金的分布和上週大致相同。"
-        : (d.btc.w1 < 0
-            ? "和上週相比換了位置的板塊。本週 BTC 收黑，「跑贏 BTC」包含跌得比較少的幣。"
-            : "和上週相比，資金明顯換了位置的板塊。")
-    }</div>`;
+      : (!flip.length)
+        ? "有板塊轉弱，但沒有任何板塊接棒 —— 資金離開了，沒有新的去處。"
+      : (!fade.length)
+        ? "有板塊翻正，而且沒有板塊轉弱 —— 是新資金進場，不是內部換手。"
+      : "一邊翻正一邊轉弱，資金在板塊之間換了位置。"
+    }${d.btc.w1 < 0 ? "<br/>本週 BTC 收黑，「跑贏 BTC」包含跌得比較少的幣。" : ""}</div>`;
 }
 
 function card5(){
