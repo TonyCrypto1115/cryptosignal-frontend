@@ -66,6 +66,14 @@ h1 .r{color:var(--rose)}
 .row.sm .nm{font-size:30px}
 .row.sm .vl{font-size:33px;min-width:160px}
 .hl{font-size:27px;font-weight:700;margin-bottom:12px}
+/* 結論卡 */
+.cc{background:var(--card);border:2px solid var(--line);border-radius:18px;
+  padding:26px 30px;margin-bottom:16px}
+.cc-t{font-size:33px;font-weight:700;line-height:1.35;display:flex;gap:14px;align-items:flex-start}
+.cc-n{display:inline-flex;align-items:center;justify-content:center;flex:none;
+  width:40px;height:40px;border-radius:12px;background:var(--coral);color:#fff;
+  font-size:23px;font-weight:700;margin-top:3px}
+.cc-b{font-size:25px;color:var(--soft);line-height:1.62;margin-top:12px;padding-left:54px}
 
 /* 條狀圖 */
 .bar2{height:14px;border-radius:7px;background:rgba(200,168,148,.22);
@@ -100,6 +108,7 @@ h1 .r{color:var(--rose)}
   <button class="btn" data-c="3">③ 漲跌榜</button>
   <button class="btn" data-c="4">④ 市場寬度</button>
   <button class="btn" data-c="5">⑤ 情緒</button>
+  <button class="btn" data-c="6">⑥ 結論</button>
   <button class="btn" id="reload">↻ 重抓資料</button>
   <button class="btn" id="dl" style="margin-left:auto">🖼 產生圖片</button>
 </div>
@@ -132,7 +141,7 @@ h1 .r{color:var(--rose)}
 <div class="shot" id="shot">
   <div class="glow g1"></div><div class="glow g2"></div>
   <div class="inner">
-    <div class="hd"><span id="h-l">幣圈週報</span><span id="h-r">1 / 5</span></div>
+    <div class="hd"><span id="h-l">幣圈週報</span><span id="h-r">1 / 6</span></div>
     <div id="body"></div>
   </div>
   <div class="ft">
@@ -498,12 +507,132 @@ function card5(){
     <div class="pq">這週你是加倉、減倉，還是什麼都沒做？</div>`;
 }
 
-const CARDS = [card1, card2, card3, card4, card5];
+// ══════════════════════════════════════════════════════════
+//  第六張：結論與判斷依據
+//  ─────────────────────────────────────────────────────────
+//  每條結論都要「兩個以上的指標交叉」才成立，不做單一數字的
+//  直覺反應（例如「漲了所以看多」）。每條都附上推論依據，
+//  讀者可以自己檢查這個推論合不合理。
+// ══════════════════════════════════════════════════════════
+function conclude(){
+  const d = DATA, n = d.coins.length;
+  const pUp   = d.upCount/n*100;
+  const pBeat = d.beatBtc/n*100;
+  const sec   = sectors();
+  const flip  = sec.filter(s=>s.w0<0 && s.w1>0);
+  const fade  = sec.filter(s=>s.w0>0 && s.w1<0);
+  const strong = sec[0], weak = sec[sec.length-1];
+  const spread = (strong&&weak) ? strong.w1-weak.w1 : 0;
+  const fr = d.avgFunding;
+  const fgJump = (d.fg && d.fg.prev!=null) ? d.fg.now-d.fg.prev : null;
+  const R = [];
+
+  // ① 指數 vs 寬度：判斷「行情」是真的還是被少數幣撐起來的
+  if(d.btc.w1 > 1 && pUp < 45) R.push([9,
+    "這不是全面行情，是少數幣在撐",
+    `BTC 上漲 ${sg(d.btc.w1)}%，但只有 ${pUp.toFixed(0)}% 的幣收紅。指數由權重最大的幣決定，當多數成分在跌、指數仍漲，代表漲幅集中在少數標的。`]);
+  if(d.btc.w1 < -1 && pUp > 55) R.push([9,
+    "大盤在跌，但賣壓沒有擴散",
+    `BTC 下跌 ${sg(d.btc.w1)}%，卻有 ${pUp.toFixed(0)}% 的幣收紅。跌的是權重，不是整個市場。`]);
+
+  // ② 槓桿 vs 寬度：擁擠的多單碰上不足的買盤
+  if(fr > 0.008 && pUp < 50) R.push([8,
+    "多單擁擠，但買盤跟不上",
+    `平均資金費率 ${fr.toFixed(3)}%（做多的人在付錢給做空的人），同時僅 ${pUp.toFixed(0)}% 的幣上漲。願意付成本做多的人多，實際把價格推上去的買盤少，這種結構在回檔時容易連鎖平倉。`]);
+  if(fr < -0.003 && pUp > 55) R.push([8,
+    "空單在付錢，而價格在漲",
+    `平均資金費率 ${fr.toFixed(3)}% 為負，代表做空的人在付錢，但同時 ${pUp.toFixed(0)}% 的幣上漲。空方部位正在承受成本。`]);
+
+  // ③ 資金輪動 vs 離場：兩者看起來很像，但意義相反
+  if(flip.length && fade.length) R.push([7,
+    "錢在換位置，不是在離場",
+    `${flip[0].name}由負轉正，同時${fade[0].name}轉弱。一邊進一邊出，資金總量沒有明顯流失，屬於板塊輪動而非整體撤出。`]);
+  if(!flip.length && fade.length >= 2) R.push([7,
+    "沒有接棒的板塊",
+    `${fade.slice(0,2).map(s=>s.name).join("、")}都從正轉負，而沒有任何板塊由負轉正。資金離開了，但沒有出現新的去處。`]);
+
+  // ④ 寬度走到極端：單一指標但幅度本身就是結構訊號
+  if(pUp <= 25) R.push([8,
+    "賣壓是全面的，不是輪跌",
+    `只有 ${pUp.toFixed(0)}% 的幣收紅。輪跌時資金會在板塊間移動、寬度維持在中間；寬度壓到這個程度，代表賣壓同時發生在各個板塊。`]);
+  if(pUp >= 72) R.push([8,
+    "買盤是全面的，不是單點",
+    `${pUp.toFixed(0)}% 的幣收紅。當上漲集中在題材時寬度不會這麼高，這個數字代表買盤同時出現在多數板塊。`]);
+
+  // ⑤ 跑贏 BTC 的比例：資金是集中還是擴散
+  if(pBeat < 35) R.push([6,
+    "山寨季還沒有開始",
+    `${(100-pBeat).toFixed(0)}% 的幣跑輸 BTC。在資金擴散的階段，這個數字通常會低於五成；目前資金仍停留在流動性最好的地方。`]);
+  if(pBeat > 62) R.push([6,
+    "資金正在往外圍移動",
+    `${pBeat.toFixed(0)}% 的幣跑贏 BTC。多數標的表現勝過龍頭，通常出現在風險偏好上升的階段。`]);
+
+  // ⑥ 板塊分化：提醒「看大盤會誤判」
+  if(spread > 14) R.push([5,
+    "用大盤判斷持倉會失準",
+    `最強的${strong.name}與最弱的${weak.name}相差 ${spread.toFixed(0)} 個百分點。同一週裡不同板塊的體感可以完全相反，整體漲跌對個別持倉的參考價值有限。`]);
+
+  // ⑦ 情緒 vs 價格：情緒是否跑在基本面前面
+  if(fgJump!=null && Math.abs(fgJump) >= 10 && Math.abs(d.btc.w1) < 4) R.push([4,
+    "情緒的波動大於價格",
+    `恐慌貪婪指數一週變動 ${fgJump>0?"+":""}${fgJump} 點，但 BTC 只走了 ${sg(d.btc.w1)}%。情緒指標本身包含社群聲量與波動率，它的變化不等於價格變化。`]);
+
+  // ── 補充條目 ──
+  // 規則不足 3 條時從這裡補。這些只描述事實、不宣稱「沒有極端」，
+  // 所以不論當週數據長怎樣都不會自相矛盾。
+  const FILL = [];
+  if(strong && strong.w1 > 0) FILL.push([3,
+    `資金本週集中在${strong.name}`,
+    `${strong.name}以 ${sg(strong.w1)}% 居各板塊之首${strong.n?`，其中有 ${strong.n} 檔成分幣`:""}。板塊平均能拉開差距，通常代表買盤有共同的主題，而不是個別標的的消息面。`]);
+  if(strong && strong.w1 <= 0) FILL.push([3,
+    "沒有任何板塊收紅",
+    `表現最好的${strong.name}也只有 ${sg(strong.w1)}%。當連最強的板塊都收黑，代表這週的下跌沒有主題上的例外。`]);
+  if(weak && strong && weak.name!==strong.name && weak.w1 < 0) FILL.push([2,
+    `${weak.name}是本週最弱的一塊`,
+    `${weak.name}平均 ${sg(weak.w1)}%，落在所有板塊最後。單一幣種走弱可能是個案，整個板塊走弱通常是資金撤出該主題。`]);
+  if(weak && strong && weak.name!==strong.name && weak.w1 >= 0) FILL.push([2,
+    "所有板塊都是正報酬",
+    `連墊底的${weak.name}都收在 ${sg(weak.w1)}%。全部板塊同向上漲，通常是整體資金流入，而不是個別題材輪動。`]);
+  FILL.push([1,
+    fr >= 0 ? "多單仍在付出持有成本" : "空單仍在付出持有成本",
+    `平均資金費率 ${fr.toFixed(3)}%。${fr>=0 ? "為正代表多方付錢給空方，持有多單每天都在扣成本。" : "為負代表空方付錢給多方，持有空單每天都在扣成本。"}這個數字反映的是槓桿部位的方向，不是價格的方向。`]);
+  FILL.push([0,
+    "本週的結構變化有限",
+    `上漲比例 ${pUp.toFixed(0)}%、跑贏 BTC ${pBeat.toFixed(0)}%、板塊最大價差 ${spread.toFixed(0)} 個百分點。這些數字之間沒有互相印證的訊號，單看任何一個都不足以下判斷。`]);
+
+  // 規則優先，不足才補，並且避免重複標題
+  const seen = new Set(R.map(x=>x[1]));
+  for(const f of FILL){ if(R.length>=3) break; if(!seen.has(f[1])){ R.push(f); seen.add(f[1]); } }
+
+  R.sort((a,b)=>b[0]-a[0]);
+  const items = R.slice(0,3);
+
+  // 一句話總結：用最高分的那條推出來，不另外造句
+  const summary = items[0][1];
+  return { summary, items };
+}
+
+function card6(){
+  const c = conclude();
+  return `
+    <div class="tag">本週結論</div>
+    <h1 style="font-size:54px">${c.summary}</h1>
+    <div class="rule" style="margin:20px 0 28px"></div>
+    ${c.items.map((it,i)=>`
+      <div class="cc">
+        <div class="cc-t"><span class="cc-n">${i+1}</span>${it[1]}</div>
+        <div class="cc-b">${it[2]}</div>
+      </div>`).join("")}
+    <div class="nt" style="margin-top:24px;font-size:25px">
+      以上是從數據推出的觀察，不是預測，也不是買賣建議。</div>`;
+}
+
+const CARDS = [card1, card2, card3, card4, card5, card6];
 
 function render(){
   if(!DATA){ $("body").innerHTML = `<h1>載入中…</h1>`; return; }
   $("h-l").textContent = `幣圈週報 ・ 第 ${$("i-week").value||1} 週`;
-  $("h-r").textContent = `${page} / 5`;
+  $("h-r").textContent = `${page} / 6`;
   const nMaj = DATA.coins.filter(c=>IS_MAJOR.has(c.name)).length;
   $("f-r").textContent = (page===3)
     ? `${nMaj} 檔主流幣 ・ 不含槓桿商品 ・ ${dateRange()}`
